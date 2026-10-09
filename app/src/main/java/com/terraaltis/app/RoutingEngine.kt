@@ -15,8 +15,11 @@ data class RouteResult(val points: JSONArray, val km: Double, val ascent: Double
  * no se presupone que ORS incluya una propiedad "ascent" en properties.
  */
 object RoutingEngine {
+    // HeiGIT es el endpoint vigente; el host anterior queda como respaldo temporal.
     private const val URL_ORS =
         "https://api.heigit.org/openrouteservice/v2/directions/foot-hiking/geojson"
+    private const val URL_ORS_LEGACY =
+        "https://api.openrouteservice.org/v2/directions/foot-hiking/geojson"
 
     fun bestRoute(sLat: Double, sLng: Double, eLat: Double, eLng: Double): RouteResult {
         require(listOf(sLat, sLng, eLat, eLng).all { it.isFinite() }) {
@@ -114,7 +117,20 @@ object RoutingEngine {
     }
 
     private fun post(body: JSONObject): JSONObject {
-        val connection = URL(URL_ORS).openConnection() as HttpURLConnection
+        return try {
+            postTo(URL_ORS, body)
+        } catch (primary: Exception) {
+            try {
+                postTo(URL_ORS_LEGACY, body)
+            } catch (legacy: Exception) {
+                legacy.addSuppressed(primary)
+                throw legacy
+            }
+        }
+    }
+
+    private fun postTo(endpoint: String, body: JSONObject): JSONObject {
+        val connection = URL(endpoint).openConnection() as HttpURLConnection
         connection.requestMethod = "POST"
         connection.connectTimeout = 15000
         connection.readTimeout = 30000
