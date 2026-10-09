@@ -79,14 +79,12 @@ jobs:
           ls -lh TerraAltis.apk TerraAltis.zip
           unzip -l TerraAltis.zip
 
-      - name: Upload APK and ZIP artifacts
+      - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         if: success()
         with:
-          name: TerraAltis
-          path: |
-            TerraAltis.apk
-            TerraAltis.zip
+          name: TerraAltis-APK
+          path: TerraAltis.apk
           if-no-files-found: error
           retention-days: 14
 
