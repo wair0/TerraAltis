@@ -1,57 +1,54 @@
 #!/usr/bin/env python3
-"""Genera mipmaps e ic_launcher_foreground desde icon_base64.txt"""
-import base64, io, os, sys
+"""Genera iconos launcher Android desde el PNG decodificado en mipmap-mdpi."""
+import base64
+import io
+import sys
 from pathlib import Path
 
 try:
     from PIL import Image
 except ImportError:
-    os.system(f"{sys.executable} -m pip install -q pillow")
-    from PIL import Image
+    print("Pillow no está instalado; instala con: python -m pip install pillow", file=sys.stderr)
+    raise
 
 ROOT = Path(__file__).resolve().parents[1]
-b64_path = ROOT / "app" / "src" / "main" / "res" / "icon_base64.txt"
-if not b64_path.exists():
-    print("No icon_base64.txt, skipping")
-    sys.exit(0)
+RES = ROOT / "app" / "src" / "main" / "res"
+candidates = [
+    RES / "mipmap-mdpi" / "ic_launcher.png",
+    RES / "icon_base64.txt",
+]
+src_path = next((p for p in candidates if p.is_file() and p.stat().st_size > 100), None)
+if src_path is None:
+    raise SystemExit("No se encontró un icono fuente válido (mipmap-mdpi/ic_launcher.png).")
 
-data = base64.b64decode(b64_path.read_text().strip())
-src = Image.open(io.BytesIO(data)).convert("RGBA")
-res = ROOT / "app" / "src" / "main" / "res"
+if src_path.suffix == ".txt":
+    src = Image.open(io.BytesIO(base64.b64decode(src_path.read_text().strip()))).convert("RGBA")
+else:
+    src = Image.open(src_path).convert("RGBA")
 
-legacy = {
-    "mipmap-mdpi": 48,
-    "mipmap-hdpi": 72,
-    "mipmap-xhdpi": 96,
-    "mipmap-xxhdpi": 144,
-    "mipmap-xxxhdpi": 192,
-}
-fg = {
-    "mipmap-mdpi": 108,
-    "mipmap-hdpi": 162,
-    "mipmap-xhdpi": 216,
-    "mipmap-xxhdpi": 324,
-    "mipmap-xxxhdpi": 432,
-}
+legacy = {"mipmap-mdpi": 48, "mipmap-hdpi": 72, "mipmap-xhdpi": 96,
+          "mipmap-xxhdpi": 144, "mipmap-xxxhdpi": 192}
+foreground = {"mipmap-mdpi": 108, "mipmap-hdpi": 162, "mipmap-xhdpi": 216,
+              "mipmap-xxhdpi": 324, "mipmap-xxxhdpi": 432}
 
 for folder, size in legacy.items():
-    d = res / folder
-    d.mkdir(parents=True, exist_ok=True)
-    img = src.resize((size, size), Image.LANCZOS)
-    img.save(d / "ic_launcher.png")
-    img.save(d / "ic_launcher_round.png")
+    dest = RES / folder
+    dest.mkdir(parents=True, exist_ok=True)
+    icon = src.resize((size, size), Image.Resampling.LANCZOS)
+    icon.save(dest / "ic_launcher.png")
+    icon.save(dest / "ic_launcher_round.png")
 
-for folder, size in fg.items():
-    d = res / folder
-    d.mkdir(parents=True, exist_ok=True)
+for folder, size in foreground.items():
+    dest = RES / folder
+    dest.mkdir(parents=True, exist_ok=True)
     canvas = Image.new("RGBA", (size, size), (0, 0, 0, 0))
-    content = int(size * 0.85)
-    icon = src.resize((content, content), Image.LANCZOS)
+    content = int(size * 0.72)
+    icon = src.resize((content, content), Image.Resampling.LANCZOS)
     offset = (size - content) // 2
-    canvas.paste(icon, (offset, offset), icon)
-    canvas.save(d / "ic_launcher_foreground.png")
+    canvas.alpha_composite(icon, (offset, offset))
+    canvas.save(dest / "ic_launcher_foreground.png")
 
-drawable = res / "drawable"
+drawable = RES / "drawable"
 drawable.mkdir(parents=True, exist_ok=True)
-src.resize((432, 432), Image.LANCZOS).save(drawable / "ic_launcher_foreground.png")
-print("Icons generated OK")
+src.resize((432, 432), Image.Resampling.LANCZOS).save(drawable / "ic_launcher_foreground.png")
+print("Launcher icons generated successfully.")
