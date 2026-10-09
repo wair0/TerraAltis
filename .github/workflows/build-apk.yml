@@ -1,3 +1,4 @@
+# Re-run build to regenerate and publish the APK/ZIP deliverables.
 name: Build APK
 
 on:
