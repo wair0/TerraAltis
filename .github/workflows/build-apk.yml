@@ -5,6 +5,9 @@ on:
     branches: [ main ]
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -34,20 +37,19 @@ jobs:
             echo "API key inyectada."
           fi
 
-      - name: Decode icon base64 files
+      - name: Decode icon source
+        run: bash scripts/decode_icons.sh
+
+      - name: Generate all launcher densities
         run: |
-          chmod +x scripts/decode_icons.sh 2>/dev/null || true
-          if [ -f scripts/decode_icons.sh ]; then
-            bash scripts/decode_icons.sh
-          fi
-          # Si ya hay PNG nativos, no hace falta
-          find app/src/main/res -name 'ic_launcher*.png' | head -5 || true
+          python3 -m pip install --user pillow
+          python3 scripts/generate_icons.py
 
       - name: Install Gradle
         run: |
-          curl -sL https://services.gradle.org/distributions/gradle-8.7-bin.zip -o /tmp/gradle.zip
+          curl --fail --show-error --silent --location https://services.gradle.org/distributions/gradle-8.7-bin.zip -o /tmp/gradle.zip
           unzip -q /tmp/gradle.zip -d /opt
-          echo "/opt/gradle-8.7/bin" >> $GITHUB_PATH
+          echo "/opt/gradle-8.7/bin" >> "$GITHUB_PATH"
 
       - name: Generate Gradle Wrapper
         run: |
