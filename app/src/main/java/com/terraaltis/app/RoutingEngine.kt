@@ -13,9 +13,11 @@ data class RouteResult(val points: JSONArray, val km: Double, val ascent: Double
  * alternativas y se queda con la de MENOR desnivel positivo acumulado.
  * Idea tomada de OpenTopoMapViewer, que usa ORS para rutas y perfil de elevación.
  * Reemplazable más adelante por un motor propio con DEM (SRTM).
+ *
+ * URL actualizada a api.heigit.org (api.openrouteservice.org fue deprecada en 2026).
  */
 object RoutingEngine {
-    private const val URL_ORS = "https://api.openrouteservice.org/v2/directions/foot-hiking/geojson"
+    private const val URL_ORS = "https://api.heigit.org/openrouteservice/v2/directions/foot-hiking/geojson"
 
     fun bestRoute(sLat: Double, sLng: Double, eLat: Double, eLng: Double): RouteResult {
         val coords = JSONArray()

@@ -1,41 +1,55 @@
-/* Leaflet + capas topográficas (ideas de OpenTopoMapViewer) + rutas/GPX + perfil de elevación */
+/* Leaflet + capas topográficas + rutas/GPX + perfil de elevación */
 const MapManager = (() => {
   const SAN_LUIS = [-32.95, -65.45];
   let map, startM = null, endM = null, line = null, onStatus = () => {};
 
   const icon = cls => L.divIcon({ className: '', html: `<div class="ta-marker ${cls}"></div>`, iconSize: [18, 18], iconAnchor: [9, 9] });
 
-  // ---- Capas: las mismas fuentes que usa OpenTopoMapViewer ----
+  // Capas que funcionan en WebView (sin openmaps.fr, que bloquea por referer)
   function defaultLayers() {
     const T = (u, o) => L.tileLayer(u, o);
     return {
       base: {
-        'OpenTopoMap': T('https://tile.openmaps.fr/opentopomap/{z}/{x}/{y}.png', { maxZoom: 17, attribution: '© OpenStreetMap, SRTM | OpenTopoMap (CC-BY-SA)' }),
-        'OpenHikingMap': T('https://tile.openmaps.fr/openhikingmap/{z}/{x}/{y}.png', { maxZoom: 17, attribution: '© OpenStreetMap | openmaps.fr' }),
-        'OpenStreetMap': T('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '© OpenStreetMap' })
+        'OpenTopoMap': T('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
+          maxZoom: 17,
+          attribution: '© OpenStreetMap, SRTM | OpenTopoMap (CC-BY-SA)',
+          subdomains: 'abc'
+        }),
+        'OpenStreetMap': T('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          maxZoom: 19,
+          attribution: '© OpenStreetMap'
+        }),
+        'ESRI World Imagery': T('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+          maxZoom: 19,
+          attribution: '© Esri'
+        })
       },
       overlays: {
-        'Senderos (Waymarked)': T('https://tile.waymarkedtrails.org/hiking/{z}/{x}/{y}.png', { maxZoom: 17, attribution: 'waymarkedtrails.org' }),
-        'Ciclovías (Waymarked)': T('https://tile.waymarkedtrails.org/cycling/{z}/{x}/{y}.png', { maxZoom: 17, attribution: 'waymarkedtrails.org' })
+        'Senderos (Waymarked)': T('https://tile.waymarkedtrails.org/hiking/{z}/{x}/{y}.png', {
+          maxZoom: 17,
+          attribution: 'waymarkedtrails.org'
+        }),
+        'Ciclovías (Waymarked)': T('https://tile.waymarkedtrails.org/cycling/{z}/{x}/{y}.png', {
+          maxZoom: 17,
+          attribution: 'waymarkedtrails.org'
+        })
       }
     };
   }
 
-  // ---- Cálculos ----
   const rad = d => d * Math.PI / 180;
   function hav(a, b) {
     const dLat = rad(b[0] - a[0]), dLng = rad(b[1] - a[1]);
     const x = Math.sin(dLat / 2) ** 2 + Math.cos(rad(a[0])) * Math.cos(rad(b[0])) * Math.sin(dLng / 2) ** 2;
-    return 12742 * Math.asin(Math.sqrt(x));   // km
+    return 12742 * Math.asin(Math.sqrt(x));
   }
-  function gainOf(el) {   // desnivel positivo con histéresis de 3 m (filtra ruido GPS/DEM)
+  function gainOf(el) {
     let g = 0, ref = el[0];
     for (const e of el) { if (e - ref >= 3) { g += e - ref; ref = e; } else if (ref - e >= 3) ref = e; }
     return g;
   }
   function lengthOf(pts) { let k = 0; for (let i = 1; i < pts.length; i++) k += hav(pts[i - 1], pts[i]); return k; }
 
-  // ---- Perfil de elevación (SVG) ----
   function drawProfile(pts, name) {
     const box = document.getElementById('profile'), svg = box.querySelector('svg');
     const el = pts.map(p => p[2]).filter(v => isFinite(v));
@@ -58,7 +72,6 @@ const MapManager = (() => {
   }
 
   function drawRoute(pts, km, gain) {
-    // pts llega como JSONArray desde Kotlin: [[lat,lng,ele], ...]
     const arr = typeof pts === 'string' ? JSON.parse(pts) : pts;
     show(arr, getComputedStyle(document.documentElement).getPropertyValue('--cyan').trim() || '#38bdd8', 'Ruta de mínimo desnivel', km, gain);
     onStatus(`Ruta lista · ${km.toFixed(1)} km · D+ ${Math.round(gain)} m`, 'ok');
@@ -74,7 +87,6 @@ const MapManager = (() => {
     onStatus(`GPX cargado: ${name}`, 'ok');
   }
 
-  // ---- Interacción ----
   function reset() { [startM, endM, line].forEach(m => m && map.removeLayer(m)); startM = endM = line = null; document.getElementById('profile').hidden = true; }
 
   function onClick(ev) {
