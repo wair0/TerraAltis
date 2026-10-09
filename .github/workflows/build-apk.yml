@@ -73,8 +73,7 @@ jobs:
           cp "$APK" TerraAltis.apk
           mkdir -p zip-package
           cp TerraAltis.apk zip-package/TerraAltis.apk
-          printf 'TerraAltis - APK de Android\n\nExtrae TerraAltis.apk y ábrelo en tu dispositivo Android para instalarlo.\n' > zip-package/LEEME.txt
-          (cd zip-package && zip -q ../TerraAltis.zip TerraAltis.apk LEEME.txt)
+          (cd zip-package && zip -q ../TerraAltis.zip TerraAltis.apk)
           ls -lh TerraAltis.apk TerraAltis.zip
           unzip -l TerraAltis.zip
 
