@@ -79,6 +79,17 @@ jobs:
           ls -lh TerraAltis.apk TerraAltis.zip
           unzip -l TerraAltis.zip
 
+      - name: Upload APK and ZIP artifacts
+        uses: actions/upload-artifact@v4
+        if: success()
+        with:
+          name: TerraAltis
+          path: |
+            TerraAltis.apk
+            TerraAltis.zip
+          if-no-files-found: error
+          retention-days: 14
+
       - name: Publish release with named files
         uses: softprops/action-gh-release@v2
         if: success()
