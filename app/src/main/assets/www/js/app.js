@@ -10,18 +10,6 @@ const TerraAltis = {
     document.getElementById('m-gain').textContent = m && isFinite(m.gain) ? `${Math.round(m.gain)} m` : '—';
   },
   drawRoute(pts, km, gain) { MapManager.drawRoute(pts, km, gain); },
-  updateTrack(trackJson, km, gain, recording, error, barometer) {
-    let pts = [];
-    try { pts = JSON.parse(trackJson || '[]'); } catch (_) {}
-    document.getElementById('track-start').hidden = !!recording;
-    document.getElementById('track-stop').hidden = !recording;
-    if (pts.length) MapManager.drawTrack(pts, km, gain);
-    setMetrics({ km, gain });
-    if (error) setStatus(error, 'busy');
-    else if (recording && !barometer) setStatus('Grabando con GPS · sin barómetro; D+ menos preciso', 'busy');
-    else if (recording) setStatus('Grabando recorrido · D+ ' + Math.round(gain) + ' m', 'ok');
-    else setStatus(pts.length ? 'Registro detenido · ' + km.toFixed(2) + ' km · D+ ' + Math.round(gain) + ' m' : 'Registro detenido', 'ok');
-  },
   // Botón atrás de Android: devuelve true si cerró algo
   back() { const o = document.body.classList.contains('overlay'); if (o) document.dispatchEvent(new CustomEvent('ta-close')); return o; }
 };
@@ -63,15 +51,6 @@ const TerraAltis = {
       case 'close': closeAll(); break;
       case 'locate': MapManager.locate(); break;
       case 'gpx': $('#gpx-file').click(); break;
-      case 'track-start':
-        if (window.Android && Android.startTrackRecording) {
-          setStatus('Iniciando registro GPS y altitud…', 'busy');
-          Android.startTrackRecording();
-        } else setStatus('El registro requiere la aplicación Android', 'busy');
-        break;
-      case 'track-stop':
-        if (window.Android && Android.stopTrackRecording) Android.stopTrackRecording();
-        break;
       case 'theme': {
         const next = root.dataset.theme === 'dark' ? 'light' : 'dark';
         root.dataset.theme = next; store.set('ta-theme', next); break;

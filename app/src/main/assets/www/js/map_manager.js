@@ -79,18 +79,6 @@ const MapManager = (() => {
     onStatus(`Ruta lista · ${km.toFixed(1)} km · D+ ${Math.round(gain)} m`, 'ok');
   }
 
-  function drawTrack(pts, km, gain) {
-    if (!map || !pts.length) return;
-    if (line) map.removeLayer(line);
-    line = L.polyline(pts.map(p => [p[0], p[1]]), {
-      color: getComputedStyle(document.documentElement).getPropertyValue('--emerald').trim() || '#34a98a',
-      weight: 4, opacity: .95
-    }).addTo(map);
-    if (pts.length === 1) map.setView([pts[0][0], pts[0][1]], 16);
-    TerraAltis.setMetrics({ km, gain });
-    drawProfile(pts, 'Desnivel registrado');
-  }
-
   function loadGpx(xml, name) {
     const doc = new DOMParser().parseFromString(xml, 'text/xml');
     const nodes = [...doc.querySelectorAll('trkpt')].length ? doc.querySelectorAll('trkpt') : doc.querySelectorAll('rtept');
@@ -132,5 +120,5 @@ const MapManager = (() => {
     map.on('locationfound', e => { L.circleMarker(e.latlng, { radius: 7, color: '#fff', weight: 2, fillColor: '#38bdd8', fillOpacity: 1 }).addTo(map); onStatus('Ubicación encontrada', 'ok'); });
     map.on('locationerror', () => onStatus('No se pudo obtener la ubicación', 'busy'));
   }
-  return { init, locate, loadGpx, drawRoute, drawTrack, invalidate: () => map && setTimeout(() => map.invalidateSize(), 50) };
+  return { init, locate, loadGpx, drawRoute, invalidate: () => map && setTimeout(() => map.invalidateSize(), 50) };
 })();
