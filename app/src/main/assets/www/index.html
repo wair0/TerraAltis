@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>TerraAltis</title>
+  <link rel="stylesheet" href="vendor/leaflet.css" />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <header class="app-header">
+    <button class="icon-btn" data-action="drawer" aria-label="Menú">☰</button>
+    <h1 class="app-title">Terra<span>Altis</span></h1>
+    <div class="header-actions">
+      <button class="icon-btn" data-action="theme" aria-label="Cambiar tema">◐</button>
+      <button class="icon-btn" data-action="pop-search" aria-label="Buscar">⌕</button>
+      <button class="icon-btn" data-action="pop-bell" aria-label="Notificaciones">🔔︎<i class="badge"></i></button>
+    </div>
+  </header>
+
+  <section class="status-banner" aria-live="polite">
+    <span class="dot" id="status-dot"></span>
+    <span id="status-text">Toca el mapa para fijar el punto de inicio</span>
+    <div class="metrics"><span>Dist <b id="m-dist">—</b></span><span>D+ <b id="m-gain">—</b></span></div>
+  </section>
+
+  <div id="views">
+    <section class="view active" data-view="map">
+      <div id="map"></div>
+      <div class="fabs">
+        <button class="fab" data-action="locate" aria-label="Mi ubicación">⌖</button>
+        <button class="fab" data-action="gpx" aria-label="Importar GPX">GPX</button>
+        <input type="file" id="gpx-file" accept=".gpx,application/gpx+xml,text/xml" hidden />
+      </div>
+      <div id="profile" hidden><div class="pmeta"><span id="p-name">Perfil de elevación</span><span id="p-range"></span></div>
+        <svg viewBox="0 0 300 60" preserveAspectRatio="none"></svg></div>
+    </section>
+    <section class="view panel" data-view="routes">
+      <h2>Rutas</h2>
+      <p class="hint">Ejemplos de maquetación. Se llenarán con los resultados del motor Kotlin.</p>
+      <article class="card"><h3>Ruta de ejemplo A</h3><p>Dist <b>12.4 km</b> · D+ <b class="em">310 m</b></p></article>
+      <article class="card"><h3>Ruta de ejemplo B</h3><p>Dist <b>8.1 km</b> · D+ <b class="em">145 m</b></p></article>
+    </section>
+    <section class="view panel" data-view="saved">
+      <h2>Guardados</h2>
+      <article class="card empty">Aún no hay rutas guardadas.</article>
+    </section>
+    <section class="view panel" data-view="profile">
+      <h2>Perfil y ajustes</h2>
+      <article class="card row"><span>Tema oscuro</span><button class="switch" data-action="theme" aria-label="Alternar tema"></button></article>
+      <article class="card row"><span>Mi ubicación (GPS)</span><b class="cy">Activa</b></article>
+      <article class="card row"><span>Versión</span><b>0.1.0</b></article>
+    </section>
+  </div>
+
+  <nav class="bottom-nav">
+    <button class="nav-item active" data-tab="map"><i>◎</i>Mapa</button>
+    <button class="nav-item" data-tab="routes"><i>⛰</i>Rutas</button>
+    <button class="nav-item" data-tab="saved"><i>★</i>Guardados</button>
+    <button class="nav-item" data-tab="profile"><i>☺</i>Perfil</button>
+  </nav>
+
+  <div id="scrim" data-action="close"></div>
+  <aside id="drawer" aria-hidden="true">
+    <div class="drawer-head">Terra<span>Altis</span><small>Rutas de mínimo desnivel</small></div>
+    <button class="drawer-item" data-tab="map">◎ Mapa</button>
+    <button class="drawer-item" data-tab="routes">⛰ Mis rutas</button>
+    <button class="drawer-item" data-tab="saved">★ Guardados</button>
+    <button class="drawer-item" data-tab="profile">⚙ Ajustes</button>
+  </aside>
+
+  <div class="popover" id="pop-search">
+    <input id="q" type="search" placeholder="Buscar lugar o cerro…" />
+    <p class="hint">Aquí se conectará el geocodificador.</p>
+  </div>
+  <div class="popover" id="pop-bell">
+    <h3>Notificaciones</h3><p class="hint">Sin notificaciones nuevas.</p>
+  </div>
+
+  <script src="vendor/leaflet.js"></script>
+  <script src="js/map_manager.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
