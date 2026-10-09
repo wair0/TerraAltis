@@ -71,8 +71,12 @@ jobs:
           APK="$(find app/build/outputs/apk/debug -maxdepth 1 -name '*.apk' -print -quit)"
           test -n "$APK"
           cp "$APK" TerraAltis.apk
-          git archive --format=zip --output=TerraAltis.zip HEAD
+          mkdir -p zip-package
+          cp TerraAltis.apk zip-package/TerraAltis.apk
+          printf 'TerraAltis - APK de Android\n\nExtrae TerraAltis.apk y ábrelo en tu dispositivo Android para instalarlo.\n' > zip-package/LEEME.txt
+          (cd zip-package && zip -q ../TerraAltis.zip TerraAltis.apk LEEME.txt)
           ls -lh TerraAltis.apk TerraAltis.zip
+          unzip -l TerraAltis.zip
 
       - name: Publish release with named files
         uses: softprops/action-gh-release@v2
