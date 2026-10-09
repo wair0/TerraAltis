@@ -164,3 +164,8 @@ body.drawer-open #drawer { transform: translateX(0); }
 .saved-route p { font-size: 13px; color: var(--muted); }
 .saved-route .saved-date { margin-top: 4px; font-size: 11px; }
 .saved-route-actions { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 12px; }
+
+/* Edición de trazados con múltiples waypoints */
+.waypoint-actions { top: 58px; }
+.ta-marker.via { background: #c16be8; }
+.route-calculate:disabled { opacity: .6; cursor: progress; }

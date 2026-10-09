@@ -20,7 +20,7 @@
 
   <section class="status-banner" aria-live="polite">
     <span class="dot" id="status-dot"></span>
-    <span id="status-text">Toca el mapa para fijar el punto de inicio</span>
+    <span id="status-text">Tocá el mapa para fijar el punto de inicio</span>
     <div class="metrics"><span>Dist <b id="m-dist">—</b></span><span>D+ <b id="m-gain">—</b></span></div>
   </section>
 
@@ -31,6 +31,11 @@
       <div class="route-actions" id="route-actions" hidden>
         <button class="small-action" data-action="save-route">Guardar ruta</button>
         <button class="small-action" data-action="export-route">Exportar GPX</button>
+        <button class="small-action" data-action="new-route">Nuevo trazado</button>
+      </div>
+      <div class="route-actions waypoint-actions" id="waypoint-actions" hidden>
+        <button class="small-action" data-action="undo-point">Deshacer punto</button>
+        <button class="small-action" data-action="clear-points">Borrar puntos</button>
       </div>
       <div class="fabs">
         <button class="fab" data-action="locate" aria-label="Mi ubicación">⌖</button>
@@ -42,8 +47,8 @@
     </section>
     <section class="view panel" data-view="routes">
       <h2>Rutas</h2>
-      <p class="hint">Calculá un trazado nuevo desde dos waypoints o importá un GPX.</p>
-      <article class="card"><h3>Cómo crear una ruta</h3><p>Elegí inicio y destino en el mapa, pulsá «Calcular ruta» y guardá el resultado para usarlo más adelante.</p></article>
+      <p class="hint">Creá rutas con tantos waypoints como necesites o importá un GPX.</p>
+      <article class="card"><h3>Cómo crear una ruta</h3><p>Tocá el mapa para fijar inicio, puntos intermedios y destino. Después pulsá «Calcular ruta»; cada tramo se calcula respetando los waypoints.</p></article>
     </section>
     <section class="view panel" data-view="saved">
       <h2>Guardados</h2>

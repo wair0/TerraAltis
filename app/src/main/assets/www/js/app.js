@@ -8,7 +8,8 @@ const TerraAltis = {
     document.getElementById('m-dist').textContent = m ? m.km.toFixed(1) + ' km' : '—';
     document.getElementById('m-gain').textContent = m && isFinite(m.gain) ? Math.round(m.gain) + ' m' : '—';
   },
-  drawRoute(pts, km, gain) { MapManager.drawRoute(pts, km, gain); },
+  drawRoute(pts, km, gain) { MapManager.drawRoute(pts, km, gain); document.getElementById('calculate-route').disabled = false; },
+  routeCalculationFailed(message) { document.getElementById('calculate-route').disabled = false; MapManager.routeCalculationFailed(message); },
   back() {
     const overlay = document.body.classList.contains('overlay');
     if (overlay) document.dispatchEvent(new CustomEvent('ta-close'));
@@ -171,6 +172,9 @@ const TerraAltis = {
       case 'locate': MapManager.locate(); break;
       case 'gpx': $('#gpx-file').click(); break;
       case 'calculate': MapManager.calculateRoute(); break;
+      case 'undo-point': MapManager.undoWaypoint(); break;
+      case 'clear-points': MapManager.newRoute(); break;
+      case 'new-route': MapManager.newRoute(); break;
       case 'save-route': openSavePanel(); break;
       case 'confirm-save-route': saveCurrentRoute(); break;
       case 'cancel-save-route': closeAll(); break;
