@@ -92,14 +92,26 @@ jobs:
       - name: Commit ZIP to repository for direct download
         if: success()
         run: |
-          mkdir -p downloads
-          cp TerraAltis.zip downloads/TerraAltis.zip
+          set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add downloads/TerraAltis.zip
-          if git diff --cached --quiet; then
-            echo "El ZIP no cambió; no hace falta crear otro commit."
-          else
+          # Rebase the generated ZIP commit on the latest main to avoid non-fast-forward
+          # failures when a newer source commit lands while this APK is building.
+          for attempt in 1 2 3; do
+            git fetch origin main
+            git reset --mixed origin/main
+            mkdir -p downloads
+            cp TerraAltis.zip downloads/TerraAltis.zip
+            git add downloads/TerraAltis.zip
+            if git diff --cached --quiet; then
+              echo "El ZIP no cambió; no hace falta crear otro commit."
+              exit 0
+            fi
             git commit -m "Add TerraAltis APK ZIP download"
-            git push origin HEAD:main
-          fi
+            if git push origin HEAD:main; then
+              exit 0
+            fi
+            echo "El push fue rechazado por un cambio concurrente; se reintentará ($attempt/3)."
+          done
+          echo "No se pudo publicar el ZIP tras 3 intentos."
+          exit 1
