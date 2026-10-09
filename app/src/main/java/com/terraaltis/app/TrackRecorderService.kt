@@ -121,9 +121,10 @@ class TrackRecorderService : Service(), LocationListener, SensorEventListener {
 
     override fun onLocationChanged(location: Location) {
         if (!recording || !location.hasAccuracy() || location.accuracy > 25f) return
-        if (firstGpsAltitude == null && location.hasAltitude()) {
-            firstGpsAltitude = location.altitude
-            if (filteredAltitude == null) filteredAltitude = location.altitude
+        val gpsAltitude = altitudeOf(location)
+        if (firstGpsAltitude == null && gpsAltitude != null) {
+            firstGpsAltitude = gpsAltitude
+            if (filteredAltitude == null) filteredAltitude = gpsAltitude
         }
 
         val previous = lastLocation
@@ -134,7 +135,7 @@ class TrackRecorderService : Service(), LocationListener, SensorEventListener {
         }
         lastLocation = Location(location)
 
-        val altitude = filteredAltitude ?: if (location.hasAltitude()) location.altitude else Double.NaN
+        val altitude = filteredAltitude ?: gpsAltitude ?: Double.NaN
         if (altitude.isFinite()) {
             updateAscent(altitude)
             track.put(JSONArray().put(location.latitude).put(location.longitude).put(altitude))
@@ -147,6 +148,15 @@ class TrackRecorderService : Service(), LocationListener, SensorEventListener {
         updateNotification()
     }
 
+    private fun altitudeOf(location: Location): Double? {
+        val available = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            location.hasAltitude()
+        } else {
+            location.altitude != 0.0
+        }
+        return if (available) location.altitude else null
+    }
+
     private fun updateAscent(altitude: Double) {
         val last = lastAcceptedAltitude
         if (last == null) {
@@ -156,7 +166,8 @@ class TrackRecorderService : Service(), LocationListener, SensorEventListener {
         }
         val delta = altitude - last
         // Umbral de 1,5 m para reducir pequeñas oscilaciones del barómetro/GPS.
-        if (abs(delta) >= 1.5) {
+        val threshold = if (hasBarometer) 1.5 else 4.0
+        if (abs(delta) >= threshold) {
             if (delta > 0) ascentMeters += delta
             lastAcceptedAltitude = altitude
             ascentReference = altitude
