@@ -18,6 +18,16 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
+      - name: Setup Python (icons)
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Generate launcher icons
+        run: |
+          pip install -q pillow
+          python scripts/generate_icons.py
+
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
         with:
@@ -28,11 +38,10 @@ jobs:
           ORS_API_KEY: ${{ secrets.ORS_API_KEY }}
         run: |
           if [ -z "$ORS_API_KEY" ]; then
-            echo "::warning::Secret ORS_API_KEY no configurado. El APK se compilará sin clave de rutas."
+            echo "::warning::Secret ORS_API_KEY no configurado."
           else
-            echo "Inyectando API key en Config.kt..."
             sed -i "s|TU_API_KEY_ORS|${ORS_API_KEY}|g" app/src/main/java/com/terraaltis/app/Config.kt
-            echo "API key inyectada correctamente."
+            echo "API key inyectada."
           fi
 
       - name: Install Gradle
