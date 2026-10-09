@@ -3,6 +3,8 @@ name: Build APK
 on:
   push:
     branches: [ main ]
+    paths-ignore:
+      - 'downloads/**'
   workflow_dispatch:
 
 permissions:
@@ -87,3 +89,18 @@ jobs:
           files: |
             TerraAltis.apk
             TerraAltis.zip
+
+      - name: Commit ZIP to repository for direct download
+        if: success()
+        run: |
+          mkdir -p downloads
+          cp TerraAltis.zip downloads/TerraAltis.zip
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add downloads/TerraAltis.zip
+          if git diff --cached --quiet; then
+            echo "El ZIP no cambió; no hace falta crear otro commit."
+          else
+            git commit -m "Add TerraAltis APK ZIP download"
+            git push origin HEAD:main
+          fi
