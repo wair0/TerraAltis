@@ -1,10 +1,18 @@
 #!/usr/bin/env bash
-# Decodifica iconos .png.b64 -> .png antes del build
-set -e
+# Decodifica recursos .png.b64 y elimina los archivos auxiliares para que
+# Android AAPT2 no intente procesarlos como recursos de la app.
+set -euo pipefail
+
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-find "$ROOT/app/src/main/res" -name '*.png.b64' 2>/dev/null | while read -r f; do
+RES="$ROOT/app/src/main/res"
+
+while IFS= read -r -d '' f; do
   out="${f%.b64}"
-  echo "Decoding $out"
+  echo "Decoding ${f#"$ROOT"/} -> ${out#"$ROOT"/}"
   base64 -d "$f" > "$out"
-done
-echo "Icons decoded."
+  # Verifica que el resultado tenga contenido antes de borrar la fuente auxiliar.
+  test -s "$out"
+  rm "$f"
+done < <(find "$RES" -type f -name '*.png.b64' -print0)
+
+echo "Icon base64 resources decoded."
