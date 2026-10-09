@@ -52,11 +52,13 @@ const MapManager = (() => {
 
   function drawProfile(pts, name) {
     const box = document.getElementById('profile'), svg = box.querySelector('svg');
-    const el = pts.map(p => p[2]).filter(v => isFinite(v));
-    if (el.length < 2) { box.hidden = true; return; }
-    let d = 0; const xs = [0]; for (let i = 1; i < pts.length; i++) xs.push(d += hav(pts[i - 1], pts[i]));
+    const valid = pts.filter(p => p[2] != null && isFinite(p[2]));
+    const el = valid.map(p => p[2]);
+    if (valid.length < 2) { box.hidden = true; return; }
+    let d = 0; const xs = [0]; for (let i = 1; i < valid.length; i++) xs.push(d += hav(valid[i - 1], valid[i]));
     const mn = Math.min(...el), mx = Math.max(...el), span = Math.max(mx - mn, 1);
-    const P = pts.map((p, i) => `${(xs[i] / xs[xs.length - 1]) * 300},${60 - ((p[2] - mn) / span) * 52}`).join(' ');
+    const total = xs[xs.length - 1] || 1;
+    const P = valid.map((p, i) => `${(xs[i] / total) * 300},${60 - ((p[2] - mn) / span) * 52}`).join(' ');
     svg.innerHTML = `<path d="M0,60 L${P} L300,60 Z"/>`;
     document.getElementById('p-name').textContent = name || 'Perfil de elevación';
     document.getElementById('p-range').textContent = `${Math.round(mn)} – ${Math.round(mx)} m`;
@@ -75,6 +77,18 @@ const MapManager = (() => {
     const arr = typeof pts === 'string' ? JSON.parse(pts) : pts;
     show(arr, getComputedStyle(document.documentElement).getPropertyValue('--cyan').trim() || '#38bdd8', 'Ruta de mínimo desnivel', km, gain);
     onStatus(`Ruta lista · ${km.toFixed(1)} km · D+ ${Math.round(gain)} m`, 'ok');
+  }
+
+  function drawTrack(pts, km, gain) {
+    if (!map || !pts.length) return;
+    if (line) map.removeLayer(line);
+    line = L.polyline(pts.map(p => [p[0], p[1]]), {
+      color: getComputedStyle(document.documentElement).getPropertyValue('--emerald').trim() || '#34a98a',
+      weight: 4, opacity: .95
+    }).addTo(map);
+    if (pts.length === 1) map.setView([pts[0][0], pts[0][1]], 16);
+    TerraAltis.setMetrics({ km, gain });
+    drawProfile(pts, 'Desnivel registrado');
   }
 
   function loadGpx(xml, name) {
@@ -118,5 +132,5 @@ const MapManager = (() => {
     map.on('locationfound', e => { L.circleMarker(e.latlng, { radius: 7, color: '#fff', weight: 2, fillColor: '#38bdd8', fillOpacity: 1 }).addTo(map); onStatus('Ubicación encontrada', 'ok'); });
     map.on('locationerror', () => onStatus('No se pudo obtener la ubicación', 'busy'));
   }
-  return { init, locate, loadGpx, drawRoute, invalidate: () => map && setTimeout(() => map.invalidateSize(), 50) };
+  return { init, locate, loadGpx, drawRoute, drawTrack, invalidate: () => map && setTimeout(() => map.invalidateSize(), 50) };
 })();
