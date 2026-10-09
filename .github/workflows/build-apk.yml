@@ -21,6 +21,11 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
         with:
@@ -42,8 +47,9 @@ jobs:
 
       - name: Generate all launcher densities
         run: |
-          python3 -m pip install --user pillow
-          python3 scripts/generate_icons.py
+          python -m pip install --upgrade pip
+          python -m pip install pillow
+          python scripts/generate_icons.py
 
       - name: Install Gradle
         run: |
