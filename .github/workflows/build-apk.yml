@@ -9,27 +9,42 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
+
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'temurin'
+
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
+        with:
+          packages: 'platform-tools platforms;android-34 build-tools;34.0.0'
+
       - name: Grant execute permission for gradlew
-        run: chmod +x gradlew || true
+        run: |
+          if [ -f gradlew ]; then
+            chmod +x gradlew
+          else
+            echo "gradlew no encontrado todavía - el proyecto aún no tiene el wrapper completo"
+            exit 0
+          fi
+
       - name: Build debug APK
         run: |
           if [ -f gradlew ]; then
-            ./gradlew assembleDebug --no-daemon
+            ./gradlew assembleDebug --no-daemon --stacktrace
           else
-            echo "No gradlew yet - using gradle wrapper generation"
-            # Placeholder until full wrapper is committed
+            echo "::warning::No hay gradlew. Se necesita completar el proyecto (wrapper + assets)."
+            exit 0
           fi
+
       - name: Upload APK
         uses: actions/upload-artifact@v4
         if: success()
         with:
           name: terraaltis-debug-apk
           path: app/build/outputs/apk/debug/*.apk
+          if-no-files-found: warn
