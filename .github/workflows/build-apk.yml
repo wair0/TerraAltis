@@ -18,16 +18,6 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Setup Python (icons)
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-
-      - name: Generate launcher icons
-        run: |
-          pip install -q pillow
-          python scripts/generate_icons.py
-
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
         with:
@@ -43,6 +33,15 @@ jobs:
             sed -i "s|TU_API_KEY_ORS|${ORS_API_KEY}|g" app/src/main/java/com/terraaltis/app/Config.kt
             echo "API key inyectada."
           fi
+
+      - name: Decode icon base64 files
+        run: |
+          chmod +x scripts/decode_icons.sh 2>/dev/null || true
+          if [ -f scripts/decode_icons.sh ]; then
+            bash scripts/decode_icons.sh
+          fi
+          # Si ya hay PNG nativos, no hace falta
+          find app/src/main/res -name 'ic_launcher*.png' | head -5 || true
 
       - name: Install Gradle
         run: |
