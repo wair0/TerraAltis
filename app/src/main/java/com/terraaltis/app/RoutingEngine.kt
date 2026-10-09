@@ -17,7 +17,8 @@ data class RouteResult(val points: JSONArray, val km: Double, val ascent: Double
 /**
  * Genera un trazado topográfico NUEVO entre dos waypoints. No consulta ni selecciona
  * caminos registrados: crea una cuadrícula de terreno, obtiene elevaciones de Open-Meteo
- * y usa Dijkstra para preferir recorridos con menos subida sin ignorar la distancia.
+ * y usa Dijkstra sobre una cuadrícula más densa y ancha para adaptarse mejor al relieve,
+ * penalizando la subida acumulada y las pendientes pronunciadas sin ignorar la distancia.
  *
  * Importante: el modelo GLO-90 es aproximado y esta cuadrícula no conoce caminos,
  * propiedades privadas, agua, vegetación ni obstáculos. No garantiza transitabilidad.
@@ -25,11 +26,13 @@ data class RouteResult(val points: JSONArray, val km: Double, val ascent: Double
 object RoutingEngine {
     private const val URL_ELEVATION = "https://api.open-meteo.com/v1/elevation"
     private const val MAX_POINTS_PER_REQUEST = 100
-    private const val ROWS = 7
-    private const val MAX_COLUMNS = 60
-    private const val TARGET_COLUMN_METERS = 100.0
+    private const val ROWS = 21
+    private const val MAX_COLUMNS = 100
+    private const val TARGET_COLUMN_METERS = 75.0
     private const val ASCENT_COST_FACTOR = 8.0
     private const val DESCENT_COST_FACTOR = 0.15
+    private const val STEEP_SLOPE_THRESHOLD = 0.08
+    private const val STEEP_SLOPE_COST_FACTOR = 5.0
 
     private data class GridPoint(
         val lat: Double,
@@ -61,7 +64,9 @@ object RoutingEngine {
 
         val columns = (ceil(directDistance / TARGET_COLUMN_METERS).toInt() + 1)
             .coerceIn(2, MAX_COLUMNS)
-        val corridorHalfWidth = (directDistance * 0.18).coerceIn(120.0, 700.0)
+        // Un corredor amplio permite bordear laderas fuertes; la anchura no implica
+        // que el modelo conozca arroyos, barrancas verticales ni propiedades privadas.
+        val corridorHalfWidth = (directDistance * 0.30).coerceIn(250.0, 2000.0)
         val alongEast = endEast / directDistance
         val alongNorth = endNorth / directDistance
         val crossEast = -alongNorth
@@ -137,7 +142,12 @@ object RoutingEngine {
                     val delta = elevations[next] - elevations[current.index]
                     val ascentPenalty = max(delta, 0.0) * ASCENT_COST_FACTOR
                     val descentPenalty = max(-delta, 0.0) * DESCENT_COST_FACTOR
-                    val candidate = current.cost + horizontal + ascentPenalty + descentPenalty
+                    // El DEM permite estimar la pendiente entre muestras. Se penalizan
+                    // las subidas y bajadas fuertes para favorecer rodeos más suaves.
+                    val grade = abs(delta) / horizontal.coerceAtLeast(1.0)
+                    val steepPenalty = max(grade - STEEP_SLOPE_THRESHOLD, 0.0) *
+                        horizontal * STEEP_SLOPE_COST_FACTOR
+                    val candidate = current.cost + horizontal + ascentPenalty + descentPenalty + steepPenalty
                     if (candidate < costs[next]) {
                         costs[next] = candidate
                         previous[next] = current.index
