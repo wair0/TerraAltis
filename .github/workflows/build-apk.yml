@@ -74,16 +74,6 @@ jobs:
           git archive --format=zip --output=TerraAltis.zip HEAD
           ls -lh TerraAltis.apk TerraAltis.zip
 
-      - name: Upload named deliverables
-        uses: actions/upload-artifact@v4
-        if: success()
-        with:
-          name: TerraAltis
-          path: |
-            TerraAltis.apk
-            TerraAltis.zip
-          if-no-files-found: error
-
       - name: Publish release with named files
         uses: softprops/action-gh-release@v2
         if: success()
