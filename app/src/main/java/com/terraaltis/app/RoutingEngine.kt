@@ -20,8 +20,8 @@ data class RouteWaypoint(val lat: Double, val lng: Double)
 
 /** Calcula cada tramo entre waypoints; almacena elevaciones y usa servicios alternativos si hay HTTP 429. */
 object RoutingEngine {
-    private const val OPEN_METEO = "https://api.open-meteo.com/v1/elevation"
-    private const val OPEN_TOPO_DATA = "https://api.opentopodata.org/v1/srtm90m"
+    private const val OPEN_TOPO_DATA = "https://api.opentopodata.org/v1/srtm30m"
+    private const val OPEN_TOPO_DATA_ASTER = "https://api.opentopodata.org/v1/aster30m"
     private const val OPEN_ELEVATION = "https://api.open-elevation.com/api/v1/lookup"
     private const val MAX_BATCH = 100
     private const val ROWS = 11
@@ -152,36 +152,55 @@ object RoutingEngine {
     private fun fetchElevations(points:List<GridPoint>):List<Double>{
         val out=ArrayList<Double>(points.size)
         for(batch in points.chunked(MAX_BATCH)){
-            var result:List<Double>?=null;var primary:Exception?=null
-            try{
-                val lat=batch.joinToString(","){it.lat.toString()};val lng=batch.joinToString(","){it.lng.toString()}
-                val json=requestJson(URL("$OPEN_METEO?latitude=$lat&longitude=$lng"),"GET",null,"Open-Meteo")
-                val arr=json.optJSONArray("elevation")?:error("Open-Meteo no devolvió elevaciones")
-                if(arr.length()!=batch.size)error("Open-Meteo devolvió una cantidad inesperada")
-                result=(0 until arr.length()).map{if(arr.isNull(it))error("Open-Meteo devolvió una elevación vacía") else arr.getDouble(it)}
-            }catch(e:Exception){primary=e}
-            if(result==null){
-                try{
-                    val locations=URLEncoder.encode(batch.joinToString("|"){"${it.lat},${it.lng}"},"UTF-8")
-                    val json=requestJson(URL("$OPEN_TOPO_DATA?locations=$locations"),"GET",null,"OpenTopoData SRTM")
-                    val arr=json.optJSONArray("results")?:error("OpenTopoData no devolvió resultados")
-                    if(arr.length()!=batch.size)error("OpenTopoData devolvió una cantidad inesperada")
-                    result=(0 until arr.length()).map{val item=arr.getJSONObject(it);if(item.isNull("elevation"))error("OpenTopoData no tiene elevación") else item.getDouble("elevation")}
-                }catch(second:Exception){
-                    try{
-                        val locations=JSONArray();batch.forEach{locations.put(JSONObject().put("latitude",it.lat).put("longitude",it.lng))}
-                        val json=requestJson(URL(OPEN_ELEVATION),"POST",JSONObject().put("locations",locations).toString(),"Open-Elevation")
-                        val arr=json.optJSONArray("results")?:error("Open-Elevation no devolvió resultados")
-                        if(arr.length()!=batch.size)error("Open-Elevation devolvió una cantidad inesperada")
-                        result=(0 until arr.length()).map{val item=arr.getJSONObject(it);if(item.isNull("elevation"))error("Open-Elevation no tiene elevación") else item.getDouble("elevation")}
-                    }catch(last:Exception){
-                        error("Fallaron los servicios de elevación. Open-Meteo: ${primary?.message}. OpenTopoData: ${second.message}. Open-Elevation: ${last.message}")
+            var result:List<Double>?=null
+            var srtmFailure:Exception?=null
+            var asterFailure:Exception?=null
+            // OpenTopoData SRTM 30 m es la fuente principal: servicio abierto y sin clave.
+            try {
+                result = fetchOpenTopoData(batch, OPEN_TOPO_DATA, "OpenTopoData SRTM30m")
+            } catch (e:Exception) {
+                srtmFailure=e
+            }
+            // ASTER ofrece una segunda fuente de relieve global si SRTM falla o no cubre una zona.
+            if(result==null) {
+                try {
+                    result = fetchOpenTopoData(batch, OPEN_TOPO_DATA_ASTER, "OpenTopoData ASTER30m")
+                } catch (e:Exception) {
+                    asterFailure=e
+                }
+            }
+            // Último recurso independiente. No se usa Open-Meteo.
+            if(result==null) {
+                try {
+                    val locations=JSONArray()
+                    batch.forEach { locations.put(JSONObject().put("latitude",it.lat).put("longitude",it.lng)) }
+                    val json=requestJson(URL(OPEN_ELEVATION),"POST",JSONObject().put("locations",locations).toString(),"Open-Elevation")
+                    val arr=json.optJSONArray("results")?:error("Open-Elevation no devolvió resultados")
+                    if(arr.length()!=batch.size)error("Open-Elevation devolvió una cantidad inesperada")
+                    result=(0 until arr.length()).map { i ->
+                        val item=arr.getJSONObject(i)
+                        if(item.isNull("elevation")) error("Open-Elevation no tiene elevación para un punto")
+                        item.getDouble("elevation")
                     }
+                } catch (e:Exception) {
+                    error("Fallaron los servicios de elevación. SRTM30m: ${srtmFailure?.message}. ASTER30m: ${asterFailure?.message}. Open-Elevation: ${e.message}")
                 }
             }
             out.addAll(result!!)
         }
         return out
+    }
+
+    private fun fetchOpenTopoData(batch:List<GridPoint>, endpoint:String, service:String):List<Double> {
+        val locations=URLEncoder.encode(batch.joinToString("|") { "${it.lat},${it.lng}" }, "UTF-8")
+        val json=requestJson(URL("$endpoint?locations=$locations&interpolation=bilinear"),"GET",null,service)
+        val arr=json.optJSONArray("results")?:error("$service no devolvió resultados")
+        if(arr.length()!=batch.size)error("$service devolvió una cantidad inesperada")
+        return (0 until arr.length()).map { i ->
+            val item=arr.getJSONObject(i)
+            if(item.isNull("elevation")) error("$service no tiene elevación para un punto")
+            item.getDouble("elevation")
+        }
     }
 
     @Synchronized private fun requestJson(url:URL,method:String,body:String?,service:String):JSONObject{
