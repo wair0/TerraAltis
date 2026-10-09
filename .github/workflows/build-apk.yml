@@ -34,17 +34,6 @@ jobs:
         with:
           packages: 'platform-tools platforms;android-34 build-tools;34.0.0'
 
-      - name: Inject ORS API Key
-        env:
-          ORS_API_KEY: ${{ secrets.ORS_API_KEY }}
-        run: |
-          if [ -z "$ORS_API_KEY" ]; then
-            echo "::warning::Secret ORS_API_KEY no configurado."
-          else
-            sed -i "s|TU_API_KEY_ORS|${ORS_API_KEY}|g" app/src/main/java/com/terraaltis/app/Config.kt
-            echo "API key inyectada."
-          fi
-
       - name: Decode icon source
         run: bash scripts/decode_icons.sh
 
