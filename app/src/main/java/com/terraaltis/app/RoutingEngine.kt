@@ -10,7 +10,6 @@ import kotlin.math.ceil
 import kotlin.math.cos
 import kotlin.math.hypot
 import kotlin.math.max
-import kotlin.math.min
 
 /** Resultado: puntos [lat, lng, elevación], distancia (km) y desnivel positivo estimado (m). */
 data class RouteResult(val points: JSONArray, val km: Double, val ascent: Double)
@@ -78,10 +77,11 @@ object RoutingEngine {
                 val east = centerEast + crossEast * offset
                 val north = centerNorth + crossNorth * offset
                 val lat = sLat + north / 111320.0
-                val lng = sLng + east / (111320.0 * cos(meanLat).let { max(abs(it), 0.01) } * if (cos(meanLat) < 0) -1 else 1)
-                // Recompute longitude using the signed cosine so western/eastern coordinates stay correct.
-                val correctedLng = sLng + east / (111320.0 * cos(meanLat).let { if (abs(it) < 0.01) 0.01 * if (it < 0) -1 else 1 else it })
-                points.add(GridPoint(lat, correctedLng, east, north))
+                val cosLat = cos(meanLat).let {
+                    if (abs(it) < 0.01) if (it < 0) -0.01 else 0.01 else it
+                }
+                val lng = sLng + east / (111320.0 * cosLat)
+                points.add(GridPoint(lat, lng, east, north))
             }
         }
 
