@@ -10,7 +10,7 @@ const TerraAltis = {
     document.getElementById('m-gain').textContent = m && isFinite(m.gain) ? `${Math.round(m.gain)} m` : '—';
   },
   drawRoute(pts, km, gain) { MapManager.drawRoute(pts, km, gain); },
-  updateTrack(trackJson, km, gain, recording, error) {
+  updateTrack(trackJson, km, gain, recording, error, barometer) {
     let pts = [];
     try { pts = JSON.parse(trackJson || '[]'); } catch (_) {}
     document.getElementById('track-start').hidden = !!recording;
@@ -18,6 +18,7 @@ const TerraAltis = {
     if (pts.length) MapManager.drawTrack(pts, km, gain);
     setMetrics({ km, gain });
     if (error) setStatus(error, 'busy');
+    else if (recording && !barometer) setStatus('Grabando con GPS · sin barómetro; D+ menos preciso', 'busy');
     else if (recording) setStatus('Grabando recorrido · D+ ' + Math.round(gain) + ' m', 'ok');
     else setStatus(pts.length ? 'Registro detenido · ' + km.toFixed(2) + ' km · D+ ' + Math.round(gain) + ' m' : 'Registro detenido', 'ok');
   },
