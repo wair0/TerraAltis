@@ -1,0 +1,56 @@
+TERRAALTIS - INSTRUCCIONES
+==========================
+
+1) ESTRUCTURA DEL PROYECTO
+   app/src/main/AndroidManifest.xml
+   app/src/main/java/com/terraaltis/app/
+       MainActivity.kt      WebView, selector de archivos GPX, botón atrás
+       WebAppInterface.kt   puente JS <-> Kotlin (window.Android)
+       RoutingEngine.kt     rutas con OpenRouteService (menor desnivel)
+       Config.kt            API key de ORS
+   app/src/main/assets/www/
+       index.html, css/styles.css, js/app.js, js/map_manager.js
+       vendor/ (Leaflet local: leaflet.js, leaflet.css, images/)
+   CREDITS.md               atribuciones y licencias
+
+2) CREAR EL PROYECTO EN ANDROID STUDIO
+   - Nuevo proyecto "Empty Views Activity", Kotlin, package: com.terraaltis.app
+   - Copiá estos archivos sobre app/src/main/ respetando las carpetas
+     (reemplazá el AndroidManifest.xml y borrá el MainActivity generado).
+   - En app/build.gradle(.kts) asegurá estas dependencias:
+        implementation("androidx.appcompat:appcompat:1.7.0")
+        implementation("androidx.activity:activity-ktx:1.9.0")
+        implementation("androidx.core:core-ktx:1.13.1")
+   - minSdk recomendado: 24.
+
+3) API KEY DE OPENROUTESERVICE (obligatoria para calcular rutas)
+   - Registrate gratis en https://openrouteservice.org y creá un token.
+   - Abrí Config.kt y reemplazá "TU_API_KEY_ORS" por tu clave.
+   - Sin clave, el banner de la app avisa y no calcula rutas.
+   - No subas tu clave a un repositorio público de GitHub.
+
+4) USO
+   - Tocá el mapa: 1er toque = Inicio, 2do = Fin (un 3er toque reinicia).
+   - Al fijar los dos puntos, Kotlin pide alternativas a ORS (senderismo)
+     y dibuja la de MENOR desnivel positivo, con distancia, D+ y perfil.
+   - Botón GPX: importa un track o ruta .gpx y muestra distancia, D+ y perfil.
+   - Botón ⌖: centra el mapa en tu ubicación GPS.
+   - Selector de capas (arriba a la derecha): OpenTopoMap, OpenHikingMap,
+     OpenStreetMap + senderos y ciclovías (Waymarked Trails).
+   - ◐ cambia entre modo claro y oscuro (se recuerda).
+
+5) LIMITACIONES CONOCIDAS
+   - ORS ofrece rutas alternativas solo en trayectos de hasta ~100 km.
+     Si falla, se usa la ruta única.
+   - ORS no tiene opción directa de "minimizar desnivel": elegir entre
+     alternativas es una aproximación. A futuro: motor propio con DEM (SRTM).
+   - Las teselas requieren internet. Para zonas sin señal en las sierras,
+     usá teselas propias o MBTiles offline.
+   - Cada servidor de teselas tiene su política de uso: uso moderado y
+     atribución visible. Para producción, conviene servidor propio.
+   - La app no se probó todavía en un dispositivo Android real.
+
+6) SI ALGO FALLA
+   - Mapa en blanco: revisá conexión a internet y que vendor/ esté en assets/www/.
+   - "Falta la API key": completá Config.kt.
+   - Error al compilar: copiá el mensaje completo para corregirlo.
