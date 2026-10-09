@@ -30,8 +30,9 @@ class MainActivity : AppCompatActivity() {
             val ascent = intent.getDoubleExtra(TrackRecorderService.EXTRA_ASCENT, 0.0)
             val recording = intent.getBooleanExtra(TrackRecorderService.EXTRA_RECORDING, false)
             val error = intent.getStringExtra("error").orEmpty()
+            val barometer = intent.getBooleanExtra("barometer", false)
             webView.evaluateJavascript(
-                "TerraAltis.updateTrack(${JSONObject.quote(track)}, $km, $ascent, $recording, ${JSONObject.quote(error)})",
+                "TerraAltis.updateTrack(${JSONObject.quote(track)}, $km, $ascent, $recording, ${JSONObject.quote(error)}, $barometer)",
                 null
             )
         }
