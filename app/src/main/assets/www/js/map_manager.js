@@ -76,7 +76,7 @@ const MapManager = (() => {
   function drawRoute(pts, km, gain) {
     const arr = typeof pts === 'string' ? JSON.parse(pts) : pts;
     show(arr, getComputedStyle(document.documentElement).getPropertyValue('--cyan').trim() || '#38bdd8', 'Ruta de mínimo desnivel', km, gain);
-    onStatus(`Ruta lista · ${km.toFixed(1)} km · D+ ${Math.round(gain)} m`, 'ok');
+    onStatus(`Trazado topográfico listo · ${km.toFixed(1)} km · D+ estimado ${Math.round(gain)} m · no verifica obstáculos`, 'ok');
   }
 
   function loadGpx(xml, name) {
