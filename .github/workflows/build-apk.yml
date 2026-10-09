@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   build:
@@ -65,10 +65,32 @@ jobs:
       - name: Build debug APK
         run: ./gradlew assembleDebug --no-daemon --stacktrace
 
-      - name: Upload APK
+      - name: Prepare named deliverables
+        if: success()
+        run: |
+          APK="$(find app/build/outputs/apk/debug -maxdepth 1 -name '*.apk' -print -quit)"
+          test -n "$APK"
+          cp "$APK" TerraAltis.apk
+          git archive --format=zip --output=TerraAltis.zip HEAD
+          ls -lh TerraAltis.apk TerraAltis.zip
+
+      - name: Upload named deliverables
         uses: actions/upload-artifact@v4
         if: success()
         with:
-          name: terraaltis-debug-apk
-          path: app/build/outputs/apk/debug/*.apk
+          name: TerraAltis
+          path: |
+            TerraAltis.apk
+            TerraAltis.zip
           if-no-files-found: error
+
+      - name: Publish release with named files
+        uses: softprops/action-gh-release@v2
+        if: success()
+        with:
+          tag_name: build-${{ github.run_number }}
+          name: TerraAltis build ${{ github.run_number }}
+          generate_release_notes: true
+          files: |
+            TerraAltis.apk
+            TerraAltis.zip
