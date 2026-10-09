@@ -17,6 +17,7 @@ import android.hardware.SensorEventListener
 import android.hardware.SensorManager
 import androidx.core.app.NotificationCompat
 import org.json.JSONArray
+import org.json.JSONObject
 import kotlin.math.abs
 
 /**
@@ -138,7 +139,7 @@ class TrackRecorderService : Service(), LocationListener, SensorEventListener {
             updateAscent(altitude)
             track.put(JSONArray().put(location.latitude).put(location.longitude).put(altitude))
         } else {
-            track.put(JSONArray().put(location.latitude).put(location.longitude).put(JSONObjectNull))
+            track.put(JSONArray().put(location.latitude).put(location.longitude).put(JSONObject.NULL))
         }
 
         val now = System.currentTimeMillis()
@@ -236,7 +237,4 @@ class TrackRecorderService : Service(), LocationListener, SensorEventListener {
         super.onDestroy()
     }
 
-    private object JSONObjectNull {
-        override fun toString() = "null"
-    }
 }
