@@ -28,6 +28,10 @@
     <section class="view active" data-view="map">
       <div id="map"></div>
       <button class="route-calculate" id="calculate-route" data-action="calculate" hidden>Calcular ruta · Enter</button>
+      <div class="route-actions" id="route-actions" hidden>
+        <button class="small-action" data-action="save-route">Guardar ruta</button>
+        <button class="small-action" data-action="export-route">Exportar GPX</button>
+      </div>
       <div class="fabs">
         <button class="fab" data-action="locate" aria-label="Mi ubicación">⌖</button>
         <button class="fab" data-action="gpx" aria-label="Importar GPX">GPX</button>
@@ -38,18 +42,19 @@
     </section>
     <section class="view panel" data-view="routes">
       <h2>Rutas</h2>
-      <p class="hint">Ejemplos de maquetación. Se llenarán con los resultados del motor Kotlin.</p>
-      <article class="card"><h3>Ruta de ejemplo A</h3><p>Dist <b>12.4 km</b> · D+ <b class="em">310 m</b></p></article>
-      <article class="card"><h3>Ruta de ejemplo B</h3><p>Dist <b>8.1 km</b> · D+ <b class="em">145 m</b></p></article>
+      <p class="hint">Calculá un trazado nuevo desde dos waypoints o importá un GPX.</p>
+      <article class="card"><h3>Cómo crear una ruta</h3><p>Elegí inicio y destino en el mapa, pulsá «Calcular ruta» y guardá el resultado para usarlo más adelante.</p></article>
     </section>
     <section class="view panel" data-view="saved">
       <h2>Guardados</h2>
-      <article class="card empty">Aún no hay rutas guardadas.</article>
+      <p class="hint">Rutas almacenadas en este teléfono. Se pueden abrir y exportar como GPX.</p>
+      <div id="saved-list" class="saved-list"></div>
     </section>
     <section class="view panel" data-view="profile">
       <h2>Perfil y ajustes</h2>
       <article class="card row"><span>Tema oscuro</span><button class="switch" data-action="theme" aria-label="Alternar tema"></button></article>
       <article class="card row"><span>Mi ubicación (GPS)</span><b class="cy">Activa</b></article>
+      <article class="card row"><span>Biblioteca</span><b>Almacenamiento local</b></article>
       <article class="card row"><span>Versión</span><b>0.1.0</b></article>
     </section>
   </div>
@@ -61,6 +66,17 @@
     <button class="nav-item" data-tab="profile"><i>☺</i>Perfil</button>
   </nav>
 
+  <section class="save-panel" id="save-panel" hidden aria-label="Guardar ruta">
+    <h3>Guardar ruta</h3>
+    <label for="route-name">Nombre</label>
+    <input id="route-name" maxlength="80" placeholder="Ej. Vuelta por el valle" />
+    <label for="route-collection">Colección</label>
+    <input id="route-collection" maxlength="50" placeholder="Mis rutas" value="Mis rutas" />
+    <div class="save-panel-actions">
+      <button class="small-action" data-action="cancel-save-route">Cancelar</button>
+      <button class="small-action primary" data-action="confirm-save-route">Guardar</button>
+    </div>
+  </section>
   <div id="scrim" data-action="close"></div>
   <aside id="drawer" aria-hidden="true">
     <div class="drawer-head">Terra<span>Altis</span><small>Rutas de mínimo desnivel</small></div>
@@ -72,7 +88,7 @@
 
   <div class="popover" id="pop-search">
     <input id="q" type="search" placeholder="Buscar lugar o cerro…" />
-    <p class="hint">Aquí se conectará el geocodificador.</p>
+    <p class="hint">La búsqueda de lugares se incorporará en una siguiente mejora.</p>
   </div>
   <div class="popover" id="pop-bell">
     <h3>Notificaciones</h3><p class="hint">Sin notificaciones nuevas.</p>

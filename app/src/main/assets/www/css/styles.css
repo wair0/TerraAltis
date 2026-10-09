@@ -2,15 +2,14 @@
 :root, :root[data-theme="dark"] {
   --bg: #14181d; --surface: #1c2229; --surface-2: #232b34;
   --border: #2e3844; --text: #e6eaef; --muted: #8b98a6;
-  --cyan: #38bdd8;      /* tecnología / GPS */
-  --emerald: #34a98a;   /* métricas topográficas */
+  --cyan: #38bdd8;
+  --emerald: #34a98a;
 }
 :root[data-theme="light"] {
   --bg: #eef0f3; --surface: #ffffff; --surface-2: #f4f6f8;
   --border: #d5dae0; --text: #1b2229; --muted: #5f6b78;
   --cyan: #0e8aa3; --emerald: #0f8a6c;
 }
-
 * { box-sizing: border-box; margin: 0; }
 html, body { height: 100%; }
 body {
@@ -19,8 +18,6 @@ body {
   font: 14px/1.4 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 }
 button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
-
-/* Header */
 .app-header {
   flex: none; height: 56px; padding: 0 8px; display: flex; align-items: center; gap: 4px;
   background: var(--surface); border-bottom: 1px solid var(--border); z-index: 1000;
@@ -30,8 +27,6 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 .header-actions { display: flex; }
 .icon-btn { width: 40px; height: 40px; border-radius: 6px; font-size: 18px; color: var(--muted); }
 .icon-btn:hover, .icon-btn:active { background: var(--surface-2); color: var(--cyan); }
-
-/* Banner de estado */
 .status-banner {
   flex: none; display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
   padding: 8px 14px; background: var(--surface-2); border-bottom: 1px solid var(--border);
@@ -41,12 +36,8 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 .dot.ok { background: var(--emerald); }
 .metrics { margin-left: auto; display: flex; gap: 12px; }
 .metrics b { color: var(--emerald); font-variant-numeric: tabular-nums; }
-
-/* Mapa */
 #map { flex: 1; min-height: 0; background: var(--surface-2); }
 :root[data-theme="dark"] .leaflet-container { background: #1a1f26; }
-
-/* Calcular un trazado nuevo desde los dos waypoints */
 .route-calculate {
   position: absolute; top: 12px; left: 50%; transform: translateX(-50%); z-index: 850;
   padding: 10px 16px; border: 1px solid var(--border); border-radius: 10px;
@@ -54,8 +45,6 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
   box-shadow: 0 4px 12px rgba(0,0,0,.25); white-space: nowrap;
 }
 .route-calculate:active { transform: translateX(-50%) scale(.97); }
-
-/* FABs */
 .fabs { position: absolute; right: 12px; bottom: 80px; display: flex; flex-direction: column; gap: 10px; z-index: 800; }
 .fab {
   width: 48px; height: 48px; border-radius: 12px; background: var(--surface);
@@ -63,8 +52,6 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
   font-size: 14px; font-weight: 600; color: var(--cyan);
 }
 .fab:active { transform: scale(.94); }
-
-/* Perfil de elevación */
 #profile {
   position: absolute; left: 10px; right: 10px; bottom: 70px; z-index: 700;
   background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
@@ -73,8 +60,6 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 #profile .pmeta { display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); margin-bottom: 4px; }
 #profile svg { width: 100%; height: 48px; display: block; }
 #profile path { fill: color-mix(in srgb, var(--emerald) 25%, transparent); stroke: var(--emerald); stroke-width: 1.5; }
-
-/* Vistas / paneles */
 #views { flex: 1; min-height: 0; position: relative; display: flex; flex-direction: column; }
 .view { display: none; flex: 1; min-height: 0; flex-direction: column; overflow: auto; }
 .view.active { display: flex; }
@@ -83,15 +68,13 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 .hint { color: var(--muted); font-size: 13px; }
 .card {
   background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
-  padding: 14px; 
+  padding: 14px;
 }
 .card h3 { font-size: 15px; margin-bottom: 4px; }
 .card .em { color: var(--emerald); }
 .card.empty { color: var(--muted); text-align: center; padding: 28px; }
 .card.row { display: flex; align-items: center; justify-content: space-between; }
 .cy { color: var(--cyan); }
-
-/* Bottom nav */
 .bottom-nav {
   flex: none; height: 60px; display: flex; background: var(--surface);
   border-top: 1px solid var(--border); z-index: 1000;
@@ -102,8 +85,6 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 }
 .nav-item i { font-size: 18px; font-style: normal; }
 .nav-item.active { color: var(--cyan); }
-
-/* Drawer + overlay */
 #scrim {
   position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 1100;
   opacity: 0; pointer-events: none; transition: opacity .2s;
@@ -120,8 +101,6 @@ body.drawer-open #drawer { transform: translateX(0); }
 .drawer-head small { display: block; font-size: 12px; color: var(--muted); font-weight: 400; letter-spacing: 0; text-transform: none; margin-top: 2px; }
 .drawer-item { display: block; width: 100%; text-align: left; padding: 12px 20px; color: var(--text); }
 .drawer-item:hover, .drawer-item.active { background: var(--surface-2); color: var(--cyan); }
-
-/* Popovers */
 .popover {
   position: fixed; top: 60px; left: 12px; right: 12px; z-index: 1300;
   background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
@@ -134,30 +113,54 @@ body.drawer-open #drawer { transform: translateX(0); }
   background: var(--surface-2); color: var(--text); font: inherit;
 }
 .popover h3 { margin-bottom: 8px; }
-
-/* Switch */
-.switch {
-  width: 44px; height: 24px; border-radius: 12px; background: var(--border);
-  position: relative;
-}
+.switch { width: 44px; height: 24px; border-radius: 12px; background: var(--border); position: relative; }
 .switch::after {
   content: ""; position: absolute; top: 3px; left: 3px; width: 18px; height: 18px;
   border-radius: 50%; background: #fff; transition: transform .2s;
 }
 :root[data-theme="dark"] .switch { background: var(--cyan); }
 :root[data-theme="dark"] .switch::after { transform: translateX(20px); }
-
-/* Marcadores custom */
 .ta-marker {
   width: 18px; height: 18px; border-radius: 50%; border: 2px solid #fff;
   box-shadow: 0 1px 4px rgba(0,0,0,.4);
 }
 .ta-marker.start { background: var(--cyan); }
 .ta-marker.end { background: #e74c3c; }
-
-/* Leaflet controls dark-ish */
 .leaflet-control-layers, .leaflet-bar a {
   background: var(--surface) !important; color: var(--text) !important;
   border-color: var(--border) !important;
 }
 .leaflet-control-attribution { font-size: 10px !important; background: color-mix(in srgb, var(--surface) 85%, transparent) !important; }
+
+/* Biblioteca local de rutas inspirada en las colecciones de Garmin Explore */
+[hidden] { display: none !important; }
+.route-actions {
+  position: absolute; top: 10px; left: 12px; z-index: 850;
+  display: flex; gap: 7px; max-width: calc(100% - 24px);
+}
+.small-action {
+  padding: 8px 11px; border: 1px solid var(--border); border-radius: 8px;
+  background: var(--surface); color: var(--text); font-size: 12px; font-weight: 650;
+  box-shadow: 0 2px 8px rgba(0,0,0,.18);
+}
+.small-action:active { transform: scale(.97); }
+.small-action.primary { color: var(--cyan); border-color: var(--cyan); }
+.small-action.danger { color: #e87575; }
+.save-panel {
+  position: fixed; left: 14px; right: 14px; top: 50%; transform: translateY(-50%);
+  z-index: 1400; padding: 18px; border: 1px solid var(--border); border-radius: 14px;
+  background: var(--surface); box-shadow: 0 10px 35px rgba(0,0,0,.45);
+}
+.save-panel h3 { font-size: 17px; margin-bottom: 14px; }
+.save-panel label { display: block; margin: 10px 0 5px; color: var(--muted); font-size: 12px; }
+.save-panel input {
+  width: 100%; padding: 11px 12px; border-radius: 8px; border: 1px solid var(--border);
+  background: var(--surface-2); color: var(--text); font: inherit;
+}
+.save-panel-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
+.saved-list { display: flex; flex-direction: column; gap: 10px; }
+.collection-heading { margin: 8px 0 0; color: var(--cyan); font-size: 13px; letter-spacing: .03em; }
+.saved-route h3 { margin-bottom: 5px; overflow-wrap: anywhere; }
+.saved-route p { font-size: 13px; color: var(--muted); }
+.saved-route .saved-date { margin-top: 4px; font-size: 11px; }
+.saved-route-actions { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 12px; }

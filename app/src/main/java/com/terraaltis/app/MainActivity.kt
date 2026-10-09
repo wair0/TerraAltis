@@ -9,15 +9,37 @@ import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
+import org.json.JSONObject
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var webView: WebView
     private var fileCb: ValueCallback<Array<Uri>>? = null
-    // Selector de archivos (importar GPX desde <input type="file">)
-    private val fileLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { r ->
-        fileCb?.onReceiveValue(WebChromeClient.FileChooserParams.parseResult(r.resultCode, r.data))
+    private val fileLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        fileCb?.onReceiveValue(WebChromeClient.FileChooserParams.parseResult(result.resultCode, result.data))
         fileCb = null
+    }
+    private var pendingGpx: String? = null
+    private val exportLauncher = registerForActivityResult(ActivityResultContracts.CreateDocument("application/gpx+xml")) { uri ->
+        val payload = pendingGpx
+        pendingGpx = null
+        if (uri == null) {
+            if (::webView.isInitialized) webView.evaluateJavascript("TerraAltis.setStatus('Exportación GPX cancelada','busy')", null)
+        } else {
+            try {
+                val output = contentResolver.openOutputStream(uri) ?: error("No se pudo abrir el archivo")
+                output.bufferedWriter(Charsets.UTF_8).use { it.write(payload.orEmpty()) }
+                webView.evaluateJavascript("TerraAltis.setStatus('GPX guardado correctamente','ok')", null)
+            } catch (e: Exception) {
+                val message = JSONObject.quote("No se pudo guardar el GPX: ${e.message ?: "error de escritura"}")
+                webView.evaluateJavascript("TerraAltis.setStatus($message,'busy')", null)
+            }
+        }
+    }
+
+    fun exportGpxDocument(filename: String, content: String) {
+        pendingGpx = content
+        runOnUiThread { exportLauncher.launch(filename.ifBlank { "TerraAltis.gpx" }) }
     }
 
     @SuppressLint("SetJavaScriptEnabled")
@@ -33,10 +55,10 @@ class MainActivity : AppCompatActivity() {
             settings.setGeolocationEnabled(true)
             webViewClient = WebViewClient()
             webChromeClient = object : WebChromeClient() {
-                override fun onGeolocationPermissionsShowPrompt(o: String, cb: GeolocationPermissions.Callback) = cb.invoke(o, true, false)
-                override fun onShowFileChooser(w: WebView, cb: ValueCallback<Array<Uri>>, p: FileChooserParams): Boolean {
-                    fileCb?.onReceiveValue(null); fileCb = cb
-                    fileLauncher.launch(p.createIntent()); return true
+                override fun onGeolocationPermissionsShowPrompt(origin: String, callback: GeolocationPermissions.Callback) = callback.invoke(origin, true, false)
+                override fun onShowFileChooser(view: WebView, callback: ValueCallback<Array<Uri>>, params: FileChooserParams): Boolean {
+                    fileCb?.onReceiveValue(null); fileCb = callback
+                    fileLauncher.launch(params.createIntent()); return true
                 }
             }
             addJavascriptInterface(WebAppInterface(this@MainActivity, this), "Android")
@@ -46,8 +68,7 @@ class MainActivity : AppCompatActivity() {
 
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
-                // Primero cierra drawer/menús desde JS; si ya estaban cerrados, sale.
-                webView.evaluateJavascript("TerraAltis.back()") { r -> if (r != "true") finish() }
+                webView.evaluateJavascript("TerraAltis.back()") { result -> if (result != "true") finish() }
             }
         })
     }
