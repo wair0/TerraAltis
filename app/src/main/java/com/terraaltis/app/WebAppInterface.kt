@@ -4,11 +4,28 @@ import android.content.Context
 import android.util.Log
 import android.webkit.JavascriptInterface
 import android.webkit.WebView
+import android.content.Intent
+import androidx.core.content.ContextCompat
 import org.json.JSONObject
 import kotlin.concurrent.thread
 
 /** Puente entre la UI web (Leaflet) y la lógica nativa. En JS: window.Android.* */
 class WebAppInterface(private val context: Context, private val webView: WebView) {
+
+    @JavascriptInterface
+    fun startTrackRecording() {
+        ContextCompat.startForegroundService(
+            context,
+            Intent(context, TrackRecorderService::class.java).setAction(TrackRecorderService.ACTION_START)
+        )
+    }
+
+    @JavascriptInterface
+    fun stopTrackRecording() {
+        context.startService(
+            Intent(context, TrackRecorderService::class.java).setAction(TrackRecorderService.ACTION_STOP)
+        )
+    }
 
     @JavascriptInterface
     fun onRouteEndpoints(startLat: Double, startLng: Double, endLat: Double, endLng: Double) {
