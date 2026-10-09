@@ -16,7 +16,7 @@ data class RouteResult(val points: JSONArray, val km: Double, val ascent: Double
  */
 object RoutingEngine {
     private const val URL_ORS =
-        "https://api.openrouteservice.org/v2/directions/foot-hiking/geojson"
+        "https://api.heigit.org/openrouteservice/v2/directions/foot-hiking/geojson"
 
     fun bestRoute(sLat: Double, sLng: Double, eLat: Double, eLng: Double): RouteResult {
         require(listOf(sLat, sLng, eLat, eLng).all { it.isFinite() }) {
