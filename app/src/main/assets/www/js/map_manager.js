@@ -75,7 +75,8 @@ const MapManager = (() => {
 
   function drawRoute(pts, km, gain) {
     const arr = typeof pts === 'string' ? JSON.parse(pts) : pts;
-    show(arr, getComputedStyle(document.documentElement).getPropertyValue('--cyan').trim() || '#38bdd8', 'Ruta de mínimo desnivel', km, gain);
+    show(arr, getComputedStyle(document.documentElement).getPropertyValue('--cyan').trim() || '#38bdd8', 'Perfil topográfico estimado', km, gain);
+    document.getElementById('calculate-route').hidden = true;
     onStatus(`Trazado topográfico listo · ${km.toFixed(1)} km · D+ estimado ${Math.round(gain)} m · no verifica obstáculos`, 'ok');
   }
 
@@ -89,17 +90,28 @@ const MapManager = (() => {
     onStatus(`GPX cargado: ${name}`, 'ok');
   }
 
-  function reset() { [startM, endM, line].forEach(m => m && map.removeLayer(m)); startM = endM = line = null; document.getElementById('profile').hidden = true; }
+  function reset() {
+    [startM, endM, line].forEach(m => m && map.removeLayer(m));
+    startM = endM = line = null;
+    document.getElementById('profile').hidden = true;
+    document.getElementById('calculate-route').hidden = true;
+  }
+
+  function calculateRoute() {
+    if (!startM || !endM) return;
+    const s = startM.getLatLng(), e = endM.getLatLng();
+    onStatus('Generando un trazado topográfico nuevo…', 'busy');
+    if (window.Android && Android.onRouteEndpoints) Android.onRouteEndpoints(s.lat, s.lng, e.lat, e.lng);
+    else onStatus('El cálculo topográfico requiere la aplicación Android', 'busy');
+  }
 
   function onClick(ev) {
     if (startM && endM) { reset(); TerraAltis.setMetrics(null); }
     if (!startM) { startM = L.marker(ev.latlng, { icon: icon('start') }).addTo(map); onStatus('Inicio fijado. Toca el punto de destino', 'busy'); }
     else {
       endM = L.marker(ev.latlng, { icon: icon('end') }).addTo(map);
-      onStatus('Calculando ruta de mínimo desnivel…', 'busy');
-      const s = startM.getLatLng(), e = endM.getLatLng();
-      if (window.Android && Android.onRouteEndpoints) Android.onRouteEndpoints(s.lat, s.lng, e.lat, e.lng);
-      else console.log('Bridge no disponible (navegador):', s, e);
+      document.getElementById('calculate-route').hidden = false;
+      onStatus('Inicio y destino fijados. Pulsa Enter o Calcular ruta', 'busy');
     }
   }
 
@@ -120,5 +132,5 @@ const MapManager = (() => {
     map.on('locationfound', e => { L.circleMarker(e.latlng, { radius: 7, color: '#fff', weight: 2, fillColor: '#38bdd8', fillOpacity: 1 }).addTo(map); onStatus('Ubicación encontrada', 'ok'); });
     map.on('locationerror', () => onStatus('No se pudo obtener la ubicación', 'busy'));
   }
-  return { init, locate, loadGpx, drawRoute, invalidate: () => map && setTimeout(() => map.invalidateSize(), 50) };
+  return { init, locate, loadGpx, drawRoute, calculateRoute, invalidate: () => map && setTimeout(() => map.invalidateSize(), 50) };
 })();

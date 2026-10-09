@@ -51,6 +51,7 @@ const TerraAltis = {
       case 'close': closeAll(); break;
       case 'locate': MapManager.locate(); break;
       case 'gpx': $('#gpx-file').click(); break;
+      case 'calculate': MapManager.calculateRoute(); break;
       case 'theme': {
         const next = root.dataset.theme === 'dark' ? 'light' : 'dark';
         root.dataset.theme = next; store.set('ta-theme', next); break;
@@ -59,6 +60,11 @@ const TerraAltis = {
   });
 
   document.addEventListener('ta-close', closeAll);
+  document.addEventListener('keydown', e => {
+    if (e.key !== 'Enter' || e.isComposing) return;
+    if (e.target && /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)) return;
+    MapManager.calculateRoute();
+  });
   $('#gpx-file').addEventListener('change', e => {
     const f = e.target.files[0]; if (!f) return;
     const r = new FileReader(); r.onload = () => MapManager.loadGpx(r.result, f.name); r.readAsText(f); e.target.value = '';

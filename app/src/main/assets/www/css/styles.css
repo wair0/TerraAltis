@@ -46,6 +46,15 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 #map { flex: 1; min-height: 0; background: var(--surface-2); }
 :root[data-theme="dark"] .leaflet-container { background: #1a1f26; }
 
+/* Calcular un trazado nuevo desde los dos waypoints */
+.route-calculate {
+  position: absolute; top: 12px; left: 50%; transform: translateX(-50%); z-index: 850;
+  padding: 10px 16px; border: 1px solid var(--border); border-radius: 10px;
+  background: var(--surface); color: var(--cyan); font-weight: 700;
+  box-shadow: 0 4px 12px rgba(0,0,0,.25); white-space: nowrap;
+}
+.route-calculate:active { transform: translateX(-50%) scale(.97); }
+
 /* FABs */
 .fabs { position: absolute; right: 12px; bottom: 80px; display: flex; flex-direction: column; gap: 10px; z-index: 800; }
 .fab {
