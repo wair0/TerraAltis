@@ -5,6 +5,7 @@ import android.content.Intent
 import android.annotation.SuppressLint
 import android.net.Uri
 import android.os.Bundle
+import android.provider.OpenableColumns
 import android.webkit.*
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.contract.ActivityResultContracts
@@ -21,6 +22,8 @@ class MainActivity : AppCompatActivity() {
         fileCb = null
     }
     private var pendingGpx: String? = null
+    private var pendingSharedGpx: Pair<Uri, String>? = null
+    private var webPageReady = false
     private val exportLauncher = registerForActivityResult(ActivityResultContracts.CreateDocument("application/gpx+xml")) { uri ->
         val payload = pendingGpx
         pendingGpx = null
@@ -43,6 +46,55 @@ class MainActivity : AppCompatActivity() {
         runOnUiThread { exportLauncher.launch(filename.ifBlank { "TerraAltis.gpx" }) }
     }
 
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        receiveSharedGpx(intent)
+    }
+
+    private fun receiveSharedGpx(incoming: Intent?) {
+        if (incoming?.action != Intent.ACTION_SEND) return
+        val uri = sharedUri(incoming) ?: return
+        var filename = uri.lastPathSegment ?: "Ruta compartida.gpx"
+        try {
+            contentResolver.query(uri, arrayOf(OpenableColumns.DISPLAY_NAME), null, null, null)?.use { cursor ->
+                if (cursor.moveToFirst()) {
+                    val index = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+                    if (index >= 0) filename = cursor.getString(index) ?: filename
+                }
+            }
+        } catch (_: Exception) { }
+        pendingSharedGpx = uri to filename
+        deliverSharedGpx()
+    }
+
+    @Suppress("DEPRECATION")
+    private fun sharedUri(incoming: Intent): Uri? {
+        return if (android.os.Build.VERSION.SDK_INT >= 33) {
+            incoming.getParcelableExtra(Intent.EXTRA_STREAM, Uri::class.java)
+        } else {
+            incoming.getParcelableExtra(Intent.EXTRA_STREAM) as? Uri
+        }
+    }
+
+    private fun deliverSharedGpx() {
+        if (!webPageReady || pendingSharedGpx == null || !::webView.isInitialized) return
+        val (uri, filename) = pendingSharedGpx ?: return
+        pendingSharedGpx = null
+        try {
+            val bytes = contentResolver.openInputStream(uri)?.use { it.readBytes() }
+                ?: error("No se pudo leer el archivo compartido")
+            if (bytes.size > 15 * 1024 * 1024) error("El GPX supera el límite de 15 MB")
+            val xml = bytes.toString(Charsets.UTF_8)
+            val safeXml = JSONObject.quote(xml)
+            val safeName = JSONObject.quote(filename)
+            webView.evaluateJavascript("MapManager.loadGpx($safeXml, $safeName)", null)
+        } catch (e: Exception) {
+            val message = JSONObject.quote("No se pudo importar el GPX compartido: ${e.message ?: "error de lectura"}")
+            webView.evaluateJavascript("TerraAltis.setStatus($message,'busy')", null)
+        }
+    }
+
     @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -55,6 +107,11 @@ class MainActivity : AppCompatActivity() {
             settings.allowFileAccess = true
             settings.setGeolocationEnabled(true)
             webViewClient = object : WebViewClient() {
+                override fun onPageFinished(view: WebView?, url: String?) {
+                    super.onPageFinished(view, url)
+                    webPageReady = true
+                    deliverSharedGpx()
+                }
                 override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest): Boolean {
                     val uri = request.url
                     if (!request.isForMainFrame || (uri.scheme != "https" && uri.scheme != "http")) return false
@@ -77,6 +134,7 @@ class MainActivity : AppCompatActivity() {
             loadUrl("file:///android_asset/www/index.html")
         }
         setContentView(webView)
+        receiveSharedGpx(intent)
 
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {

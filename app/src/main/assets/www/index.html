@@ -27,6 +27,19 @@
   <div id="views">
     <section class="view active" data-view="map">
       <div id="map"></div>
+      <section id="trail-explorer" class="trail-explorer" hidden aria-label="Explorar rutas desde el mapa">
+        <div class="trail-explorer-head"><div><h3>Explorar rutas</h3><p class="hint">Todo desde TerraAltis</p></div><button class="small-action" data-action="close-trail-explorer" aria-label="Cerrar explorador">Cerrar</button></div>
+        <button class="small-action primary trail-search-button" data-action="search-trails">Buscar senderos en esta zona</button>
+        <p class="hint">Busca rutas de senderismo cartografiadas en OpenStreetMap y las dibuja sobre este mapa.</p>
+        <div class="provider-import-grid">
+          <button class="provider-import" data-action="import-provider" data-provider="Wikiloc">Importar GPX de <strong>Wikiloc</strong></button>
+          <button class="provider-import" data-action="import-provider" data-provider="AllTrails">Importar GPX de <strong>AllTrails</strong></button>
+          <button class="provider-import" data-action="import-provider" data-provider="komoot">Importar GPX de <strong>komoot</strong></button>
+          <button class="provider-import" data-action="import-provider" data-provider="Mapy.com">Importar GPX de <strong>Mapy.com</strong></button>
+        </div>
+        <p class="hint">Para estas cuatro plataformas, elegí un GPX guardado en el teléfono. La importación directa de sus catálogos requiere APIs y permisos que no están disponibles de forma general.</p>
+        <div id="trail-results" class="trail-results" aria-live="polite"></div>
+      </section>
       <button class="route-calculate" id="calculate-route" data-action="calculate" hidden>Calcular ruta · Enter</button>
       <div class="route-actions" id="route-actions" hidden>
         <button class="small-action" data-action="save-route">Guardar ruta</button>
@@ -39,6 +52,7 @@
         <button class="small-action" data-action="clear-points">Borrar puntos</button>
       </div>
       <div class="fabs">
+        <button class="fab" data-action="open-trail-explorer" aria-label="Explorar rutas">Rutas</button>
         <button class="fab" data-action="locate" aria-label="Mi ubicación">⌖</button>
         <button class="fab" data-action="gpx" aria-label="Importar GPX">GPX</button>
         <input type="file" id="gpx-file" accept=".gpx,application/gpx+xml,text/xml" hidden />
@@ -51,15 +65,9 @@
       <p class="hint">Creá rutas con tantos waypoints como necesites o importá un GPX.</p>
       <article class="card"><h3>Cómo crear una ruta</h3><p>Tocá el mapa para fijar inicio, puntos intermedios y destino. Después pulsá «Calcular ruta»; cada tramo se calcula respetando los waypoints.</p></article>
       <article class="card">
-        <h3>Explorar rutas en otras plataformas</h3>
-        <p class="hint">Buscá senderos publicados, compará experiencias y consultá alternativas. Son enlaces externos; TerraAltis no accede a sus bases privadas ni valida automáticamente sus rutas.</p>
-        <div class="service-grid">
-          <a class="service-link" href="https://es.wikiloc.com/outdoor-navigation-app"><strong>Wikiloc</strong><span>Rutas comunitarias, tracks y waypoints</span><small>Abrir sitio ↗</small></a>
-          <a class="service-link" href="https://www.alltrails.com/"><strong>AllTrails</strong><span>Senderos, reseñas, fotos y mapas de rutas</span><small>Abrir sitio ↗</small></a>
-          <a class="service-link" href="https://www.komoot.com/"><strong>komoot</strong><span>Planificación outdoor y perfiles de elevación</span><small>Abrir sitio ↗</small></a>
-          <a class="service-link" href="https://mapy.com/"><strong>Mapy.com</strong><span>Cartografía y planificación para actividades al aire libre</span><small>Abrir sitio ↗</small></a>
-        </div>
-        <p class="hint">Flujo recomendado: consultá la ruta en la plataforma, exportala como GPX si la plataforma lo permite y luego importala con el botón GPX del mapa. La disponibilidad de exportación puede depender de la cuenta.</p>
+        <h3>Fuentes de rutas dentro del mapa</h3>
+        <p>Usá el botón <strong>Rutas</strong> flotante sobre el mapa para explorar senderos cartografiados o cargar tracks GPX de Wikiloc, AllTrails, komoot y Mapy.com sin abandonar TerraAltis.</p>
+        <p class="hint">Las rutas de terceros se muestran como referencias. La cobertura de OpenStreetMap puede variar y no equivale a validar la seguridad o transitabilidad del terreno.</p>
       </article>
       <article class="card">
         <h3>Funciones útiles evaluadas</h3>

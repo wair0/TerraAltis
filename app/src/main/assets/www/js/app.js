@@ -21,6 +21,7 @@ const TerraAltis = {
   const $ = s => document.querySelector(s), $$ = s => document.querySelectorAll(s);
   const root = document.documentElement, body = document.body;
   const SAVED_KEY = 'ta-saved-routes';
+  let importProvider = null;
   const store = {
     get: k => { try { return localStorage.getItem(k); } catch (e) { return null; } },
     set: (k, v) => { try { localStorage.setItem(k, v); return true; } catch (e) { return false; } }
@@ -170,7 +171,14 @@ const TerraAltis = {
       case 'pop-bell': togglePop('#pop-bell'); break;
       case 'close': closeAll(); break;
       case 'locate': MapManager.locate(); break;
-      case 'gpx': $('#gpx-file').click(); break;
+      case 'gpx': importProvider = null; $('#gpx-file').click(); break;
+      case 'open-trail-explorer': $('#trail-explorer').hidden = false; break;
+      case 'close-trail-explorer': $('#trail-explorer').hidden = true; break;
+      case 'search-trails': MapManager.searchNearbyTrails(); break;
+      case 'import-provider':
+        importProvider = el.dataset.provider || 'GPX';
+        $('#gpx-file').click();
+        break;
       case 'calculate': MapManager.calculateRoute(); break;
       case 'undo-point': MapManager.undoWaypoint(); break;
       case 'clear-points': MapManager.newRoute(); break;
@@ -203,7 +211,8 @@ const TerraAltis = {
   $('#gpx-file').addEventListener('change', e => {
     const file = e.target.files[0]; if (!file) return;
     const reader = new FileReader();
-    reader.onload = () => MapManager.loadGpx(reader.result, file.name);
+    const provider = importProvider; importProvider = null;
+    reader.onload = () => MapManager.loadGpx(reader.result, provider ? provider + ' · ' + file.name : file.name);
     reader.readAsText(file);
     e.target.value = '';
   });

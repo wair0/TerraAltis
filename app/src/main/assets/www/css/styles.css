@@ -232,3 +232,31 @@ body.drawer-open #drawer { transform: translateX(0); }
 @media (max-width: 340px) {
   .service-grid { grid-template-columns: 1fr; }
 }
+
+
+/* Explorador de rutas integrado en el mapa */
+.view[data-view="map"] { position: relative; }
+.trail-explorer {
+  position: absolute; z-index: 900; left: 10px; right: 10px; bottom: 10px;
+  max-height: min(66%, 520px); overflow: auto; padding: 12px;
+  border: 1px solid var(--border); border-radius: 12px;
+  background: var(--surface); box-shadow: 0 8px 28px rgba(0,0,0,.42);
+}
+.trail-explorer-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 9px; }
+.trail-explorer-head h3 { font-size: 16px; }
+.trail-explorer-head .hint { font-size: 11px; }
+.trail-search-button { width: 100%; margin-bottom: 8px; color: var(--cyan); }
+.provider-import-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 7px; margin: 10px 0; }
+.provider-import { text-align: left; padding: 9px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface-2); font-size: 11px; line-height: 1.35; }
+.provider-import strong { display: block; color: var(--cyan); font-size: 12px; margin-top: 3px; }
+.provider-import:focus-visible, .trail-result:focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; }
+.trail-results { display: flex; flex-direction: column; gap: 6px; margin-top: 8px; }
+.trail-result { display: flex; flex-direction: column; align-items: flex-start; gap: 3px; text-align: left; padding: 9px 10px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface-2); }
+.trail-result strong { color: var(--text); font-size: 12px; }
+.trail-result span { color: var(--muted); font-size: 11px; }
+.trail-search-button:disabled { opacity: .6; }
+@media (max-width: 360px) {
+  .trail-explorer { left: 6px; right: 6px; bottom: 6px; max-height: 70%; }
+  .provider-import-grid { gap: 5px; }
+  .provider-import { padding: 7px; }
+}
