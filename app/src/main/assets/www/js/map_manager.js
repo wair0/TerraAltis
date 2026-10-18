@@ -12,6 +12,22 @@ const MapManager = (() => {
     const openTopo=()=>T('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',{maxZoom:17,attribution:'© OpenStreetMap, SRTM | OpenTopoMap (CC-BY-SA)',subdomains:'abc'});
     const ignTopoOverlay=()=>T('https://wms.ign.gob.ar/geoserver/gwc/service/tms/1.0.0/mapabase_topo@EPSG%3A3857@png/{z}/{x}/{-y}.png',{minZoom:0,maxZoom:19,maxNativeZoom:13,opacity:0.42,attribution:ignAttr+' · Argenmap topográfico'});
     const satellite=()=>T('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxZoom:19,attribution:'© Esri'});
+    // Servicios oficiales dinámicos del IGN (ArcGIS REST). Se renderizan como teselas transparentes,
+    // sin depender de plugins externos de Leaflet.
+    const ignDynamic=(service,layers,label,opacity=0.85)=>{
+      const endpoint='https://ide.ign.gob.ar/geoservicios/rest/services/ANIDA/'+service+'/MapServer/export';
+      const layer=L.gridLayer({tileSize:256,opacity,attribution:'© IGN Argentina · '+label});
+      layer.createTile=function(coords,done){
+        const tile=document.createElement('img');tile.alt='';tile.setAttribute('role','presentation');
+        const nw=map.unproject(L.point(coords.x*256,coords.y*256),coords.z);
+        const se=map.unproject(L.point((coords.x+1)*256,(coords.y+1)*256),coords.z);
+        const a=L.CRS.EPSG3857.project(nw),b=L.CRS.EPSG3857.project(se);
+        const bbox=[a.x,b.y,b.x,a.y].join(',');
+        const url=endpoint+'?bbox='+encodeURIComponent(bbox)+'&bboxSR=3857&imageSR=3857&size=256%2C256&format=png32&transparent=true&f=image&layers='+encodeURIComponent('show:'+layers.join(','));
+        tile.onload=()=>done(null,tile);tile.onerror=()=>done(new Error('No se pudo cargar '+label),tile);tile.src=url;return tile;
+      };
+      return layer;
+    };
     return {base:{
       'IGN · Argenmap oficial':ignTms('capabaseargenmap'),
       'IGN · Topográfico':T('https://wms.ign.gob.ar/geoserver/gwc/service/tms/1.0.0/mapabase_topo@EPSG%3A3857@png/{z}/{x}/{-y}.png',{minZoom:0,maxZoom:19,maxNativeZoom:13,attribution:ignAttr+' · Argenmap'}),
@@ -25,7 +41,9 @@ const MapManager = (() => {
       'ESRI World Imagery':satellite()
     },overlays:{
       'Senderos (Waymarked)':T('https://tile.waymarkedtrails.org/hiking/{z}/{x}/{y}.png',{maxZoom:17,attribution:'waymarkedtrails.org'}),
-      'Ciclovías (Waymarked)':T('https://tile.waymarkedtrails.org/cycling/{z}/{x}/{y}.png',{maxZoom:17,attribution:'waymarkedtrails.org'})
+      'Ciclovías (Waymarked)':T('https://tile.waymarkedtrails.org/cycling/{z}/{x}/{y}.png',{maxZoom:17,attribution:'waymarkedtrails.org'}),
+      'IGN · Hidrografía oficial':ignDynamic('Hidrografia',[0,1,2,3],'hidrografía oficial',0.9),
+      'IGN · Cerros y relieve':ignDynamic('Relieve',[0],'relieve oficial',0.85)
     }};
   }
   const rad=d=>d*Math.PI/180;
