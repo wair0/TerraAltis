@@ -65,3 +65,6 @@ La app también muestra una evaluación de funciones de referencia de OsmAnd, Ga
 El mapa incluye un explorador que consulta senderos cartografiados en OpenStreetMap (Overpass API) y dibuja sus relaciones sobre TerraAltis. También permite importar un GPX descargado de Wikiloc, AllTrails, komoot o Mapy.com sin salir del mapa. La importación usa el selector de archivos del teléfono.
 
 Esto **no** es una integración directa con los catálogos privados ni las APIs comerciales de esos cuatro servicios. La cobertura depende de los datos abiertos disponibles y la conectividad. Las rutas mostradas no están validadas en campo y no garantizan seguridad ni transitabilidad.
+
+
+También se puede usar **Compartir → TerraAltis** desde otra app cuando esta comparta el track como archivo GPX/XML. TerraAltis recibe el archivo y lo dibuja en su propio mapa; si no aparece en el menú Compartir, usá la opción de importar GPX dentro del explorador.
