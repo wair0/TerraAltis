@@ -49,3 +49,12 @@ App Android híbrida (WebView + Leaflet) para rutas de senderismo con **mínimo 
 
 ## Uso
 Ver `INSTRUCCIONES.txt`.
+
+
+## Plataformas de rutas y evaluación funcional
+
+La pestaña **Rutas** incluye enlaces externos a [Wikiloc](https://es.wikiloc.com/outdoor-navigation-app), [AllTrails](https://www.alltrails.com/), [komoot](https://www.komoot.com/) y [Mapy.com](https://mapy.com/). Cuando una plataforma permita exportar una ruta como GPX, se puede importar en TerraAltis desde el botón **GPX** del mapa. Las exportaciones y funciones disponibles pueden depender de la cuenta.
+
+La app también muestra una evaluación de funciones de referencia de OsmAnd, Gaia GPS, Locus Map, OruxMaps, Avenza Maps y Organic Maps. La evaluación completa y las prioridades están en [ANALISIS_APPS_REFERENCIA.md](ANALISIS_APPS_REFERENCIA.md).
+
+**Importante:** los enlaces no son una integración de sus APIs ni una sincronización automática. Los tracks comunitarios pueden estar desactualizados y no validan la seguridad de una ruta. TerraAltis no garantiza transitabilidad.
