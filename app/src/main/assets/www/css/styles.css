@@ -45,7 +45,7 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
   box-shadow: 0 4px 12px rgba(0,0,0,.25); white-space: nowrap;
 }
 .route-calculate:active { transform: scale(.97); }
-.fabs { position: absolute; right: 10px; bottom: 12px; display: flex; flex-direction: column; gap: 8px; z-index: 800; }
+.fabs { position: absolute; right: 10px; bottom: 112px; display: flex; flex-direction: column; gap: 8px; z-index: 800; }
 .fab {
   width: 48px; height: 48px; border-radius: 12px; background: var(--surface);
   border: 1px solid var(--border); box-shadow: 0 4px 12px rgba(0,0,0,.25);
@@ -175,7 +175,7 @@ body.drawer-open #drawer { transform: translateX(0); }
   .route-actions .small-action { padding: 7px 8px; font-size: 11px; }
   .route-calculate { top: 10px; left: 10px; max-width: calc(100% - 20px); white-space: normal; }
   #profile { left: 8px; right: 66px; bottom: 8px; }
-  .fabs { right: 8px; bottom: 8px; gap: 7px; }
+  .fabs { right: 8px; bottom: 108px; gap: 7px; }
   .fab { width: 44px; height: 44px; }
 }
 .ta-marker.via { background: #c16be8; }
@@ -192,3 +192,12 @@ body.drawer-open #drawer { transform: translateX(0); }
 
 /* Route correction control */
 [data-action="correct-route"] { border-color: var(--cyan); }
+
+/* Separación de controles flotantes: los FAB quedan por encima del zoom de Leaflet. */
+.leaflet-bottom.leaflet-right { bottom: 0; }
+.route-actions { row-gap: 6px; }
+@media (max-width: 360px) {
+  .route-actions { right: 56px; max-width: calc(100% - 64px); }
+  .route-actions .small-action { padding: 6px 7px; font-size: 10px; }
+  .route-calculate { max-width: calc(100% - 72px); }
+}
