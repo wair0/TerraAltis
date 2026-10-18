@@ -57,3 +57,31 @@ Al revisar el árbol de la rama main el 2026-10-18, no aparece una carpeta llama
 
 REGLA DE CONTINUIDAD
 Antes de afirmar que algo está verificado, comprobar el código o los metadatos del servicio. Después de cada cambio, revisar el diff, esperar el resultado de GitHub Actions y distinguir claramente compilación exitosa de funcionamiento probado.
+
+ANÁLISIS DE APLICACIONES SIMILARES A TERRAALTIS
+Fecha: 2026-10-18
+
+Aplicaciones revisadas como referencia funcional (no se afirma que ninguna reproduzca exactamente el objetivo de TerraAltis):
+
+- OsmAnd — https://osmand.net/ — mapas offline, navegación y funciones topográficas/curvas de nivel según los mapas instalados.
+- Gaia GPS — https://www.gaiagps.com/ — mapas topográficos, capas de terreno y planificación outdoor.
+- Locus Map — https://www.locusmap.app/ — mapas, navegación GPS, tracks y perfiles de elevación.
+- OruxMaps — https://www.oruxmaps.com/ — navegación GPS, mapas offline y tracks.
+- Avenza Maps — https://www.avenzamaps.com/ — mapas georreferenciados, incluidos mapas topográficos de terceros.
+- Wikiloc — https://es.wikiloc.com/outdoor-navigation-app — rutas comunitarias, navegación y perfiles de elevación.
+- komoot — https://www.komoot.com/ — planificación de rutas outdoor y perfiles de elevación.
+- Organic Maps — https://organicmaps.app/ — mapas offline y navegación sencilla.
+- Mapy.com — https://mapy.com/ — cartografía y navegación para actividades al aire libre.
+- AllTrails — https://www.alltrails.com/ — búsqueda de senderos existentes, reseñas y fotos.
+
+Conclusión: OsmAnd, Gaia GPS y Wikiloc son referencias especialmente útiles, respectivamente, para cartografía/offline, capas topográficas y comparación con rutas conocidas. En esta revisión no se confirmó una aplicación que genere exactamente rutas inéditas campo a través entre puntos elegidos por el usuario, priorice el menor desnivel positivo y evite cauces, barrancos, humedales y pendientes con datos de terreno verificados. No confundir el catálogo de senderos existentes con un motor que calcula una ruta nueva.
+
+Funciones que vale la pena evaluar para TerraAltis:
+1. Curvas de nivel, sombreado del relieve y capas de pendiente.
+2. Perfil de elevación con desnivel positivo y negativo diferenciados.
+3. Grabación GPS y gestión/importación/exportación de tracks GPX.
+4. Mapas descargables para uso sin conexión, respetando licencias y atribuciones.
+5. Marcadores y puntos de interés.
+6. Capas de terreno y riesgos únicamente cuando sus datos estén disponibles y validados.
+
+Limitación: funciones, cobertura y disponibilidad pueden cambiar por país, versión y tipo de cuenta. Esta lista es una referencia comparativa, no una garantía de precisión ni de seguridad. TerraAltis debe advertir cuando los datos disponibles no alcancen para evaluar un tramo.
