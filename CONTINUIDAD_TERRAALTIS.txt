@@ -124,3 +124,9 @@ Rama: feat/explorador-rutas-en-mapa
 - Esta integración NO consulta directamente las bases privadas de esas cuatro plataformas. Sus catálogos/APIs no están disponibles de forma general sin condiciones, credenciales o acuerdos específicos. No se implementó scraping ni se copiaron reseñas/fotos/mapas.
 - Las relaciones de OpenStreetMap pueden estar incompletas o desactualizadas; no certifican transitabilidad. La búsqueda requiere conexión, zoom suficiente y disponibilidad de Overpass.
 - Pendiente: ejecutar build Android, probar CORS/Overpass en WebView real, probar archivos GPX de cada proveedor y revisar atribución/licencias de los datos.
+
+
+INTERCAMBIO DIRECTO DE GPX DESDE OTRAS APLICACIONES
+- MainActivity acepta archivos GPX/XML compartidos desde el menú Compartir de Android y los carga en el mapa de TerraAltis sin abrir un navegador.
+- El receptor acepta MIME application/gpx+xml, application/xml y text/xml; limita la lectura a 15 MB y escapa los datos antes de pasarlos a JavaScript.
+- Esto facilita el traspaso cuando Wikiloc, AllTrails, komoot o Mapy.com ofrecen compartir/exportar el archivo. No crea acceso directo a sus catálogos ni elimina restricciones de cuenta.
