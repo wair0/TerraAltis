@@ -157,7 +157,7 @@ const MapManager = (() => {
   let discoveredTrailLayers = new Map();
   let trailSearchBusy = false;
   function clearDiscoveredTrails(){
-    discoveredTrailLayers.forEach(layer=>{if(map.hasLayer(layer))map.removeLayer(layer);});
+    discoveredTrailLayers.forEach(entry=>{if(map.hasLayer(entry.layer))map.removeLayer(entry.layer);});
     discoveredTrailLayers.clear();
   }
   function zoomToDiscoveredTrail(id){
