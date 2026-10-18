@@ -25,7 +25,7 @@ object RoutingEngine {
     private const val OPEN_ELEVATION = "https://api.open-elevation.com/api/v1/lookup"
     private const val MAX_BATCH = 100
     private const val ROWS = 13
-    private const val MAX_COLUMNS = 70
+    private const val MAX_COLUMNS = 90
     private const val TARGET_METERS = 55.0
     private const val CACHE_NAME = "terrain_elevation_cache_v2"
     private const val CACHE_PREFIX = "e2_"
@@ -66,7 +66,11 @@ object RoutingEngine {
         val endNorth=(eLat-sLat)*111320.0
         val direct=hypot(endEast,endNorth)
         require(direct>=10.0) { "Dos waypoints están a menos de 10 metros; separalos un poco" }
-        val columns=(ceil(direct/TARGET_METERS).toInt()+1).coerceIn(2,MAX_COLUMNS)
+        val requiredColumns=ceil(direct/TARGET_METERS).toInt()+1
+        require(requiredColumns<=MAX_COLUMNS) {
+            "Este tramo supera la distancia que TerraAltis puede analizar con la resolución conservadora actual (~4,8 km por tramo). Añadí uno o más waypoints intermedios; no se generó una ruta de baja resolución."
+        }
+        val columns=requiredColumns.coerceAtLeast(2)
         val width=(direct*0.25).coerceIn(300.0,2500.0)
         val alongEast=endEast/direct;val alongNorth=endNorth/direct
         val crossEast=-alongNorth;val crossNorth=alongEast
