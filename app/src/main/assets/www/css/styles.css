@@ -39,13 +39,13 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 #map { flex: 1; min-height: 0; background: var(--surface-2); }
 :root[data-theme="dark"] .leaflet-container { background: #1a1f26; }
 .route-calculate {
-  position: absolute; top: 12px; left: 50%; transform: translateX(-50%); z-index: 850;
-  padding: 10px 16px; border: 1px solid var(--border); border-radius: 10px;
+  position: absolute; top: 10px; left: 10px; transform: none; z-index: 850;
+  padding: 10px 14px; border: 1px solid var(--border); border-radius: 10px;
   background: var(--surface); color: var(--cyan); font-weight: 700;
   box-shadow: 0 4px 12px rgba(0,0,0,.25); white-space: nowrap;
 }
-.route-calculate:active { transform: translateX(-50%) scale(.97); }
-.fabs { position: absolute; right: 12px; bottom: 80px; display: flex; flex-direction: column; gap: 10px; z-index: 800; }
+.route-calculate:active { transform: scale(.97); }
+.fabs { position: absolute; right: 10px; bottom: 12px; display: flex; flex-direction: column; gap: 8px; z-index: 800; }
 .fab {
   width: 48px; height: 48px; border-radius: 12px; background: var(--surface);
   border: 1px solid var(--border); box-shadow: 0 4px 12px rgba(0,0,0,.25);
@@ -53,7 +53,7 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 }
 .fab:active { transform: scale(.94); }
 #profile {
-  position: absolute; left: 10px; right: 10px; bottom: 70px; z-index: 700;
+  position: absolute; left: 10px; right: 68px; bottom: 12px; z-index: 700;
   background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
   padding: 8px 10px 6px; box-shadow: 0 4px 16px rgba(0,0,0,.3);
 }
@@ -135,8 +135,9 @@ body.drawer-open #drawer { transform: translateX(0); }
 /* Biblioteca local de rutas inspirada en las colecciones de Garmin Explore */
 [hidden] { display: none !important; }
 .route-actions {
-  position: absolute; top: 10px; left: 12px; z-index: 850;
-  display: flex; gap: 7px; max-width: calc(100% - 24px);
+  position: absolute; top: 10px; left: 10px; right: 10px; z-index: 850;
+  display: flex; flex-wrap: wrap; align-items: center; gap: 6px;
+  max-width: calc(100% - 20px); padding-right: 58px;
 }
 .small-action {
   padding: 8px 11px; border: 1px solid var(--border); border-radius: 8px;
@@ -165,8 +166,18 @@ body.drawer-open #drawer { transform: translateX(0); }
 .saved-route .saved-date { margin-top: 4px; font-size: 11px; }
 .saved-route-actions { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 12px; }
 
-/* Edición de trazados con múltiples waypoints */
-.waypoint-actions { top: 58px; }
+/* Edición de trazados: controles apilados sin tapar el mapa */
+.waypoint-actions { top: 62px; right: 10px; padding-right: 0; }
+#route-actions:not([hidden]) ~ #waypoint-actions { top: 62px; }
+.small-action { min-height: 36px; }
+@media (max-width: 420px) {
+  .route-actions { right: 8px; left: 8px; max-width: calc(100% - 16px); padding-right: 0; }
+  .route-actions .small-action { padding: 7px 8px; font-size: 11px; }
+  .route-calculate { top: 10px; left: 10px; max-width: calc(100% - 20px); white-space: normal; }
+  #profile { left: 8px; right: 66px; bottom: 8px; }
+  .fabs { right: 8px; bottom: 8px; gap: 7px; }
+  .fab { width: 44px; height: 44px; }
+}
 .ta-marker.via { background: #c16be8; }
 .route-calculate:disabled { opacity: .6; cursor: progress; }
 
