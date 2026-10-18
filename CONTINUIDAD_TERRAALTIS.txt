@@ -85,3 +85,30 @@ Funciones que vale la pena evaluar para TerraAltis:
 6. Capas de terreno y riesgos únicamente cuando sus datos estén disponibles y validados.
 
 Limitación: funciones, cobertura y disponibilidad pueden cambiar por país, versión y tipo de cuenta. Esta lista es una referencia comparativa, no una garantía de precisión ni de seguridad. TerraAltis debe advertir cuando los datos disponibles no alcancen para evaluar un tramo.
+
+
+INTEGRACIÓN DE PLATAFORMAS EXTERNAS Y EVALUACIÓN
+Fecha: 2026-10-18
+Rama: feat/integracion-servicios-rutas
+
+CAMBIO IMPLEMENTADO
+- La pestaña «Rutas» incluye accesos a Wikiloc, AllTrails, komoot y Mapy.com.
+- Los enlaces HTTP(S) abiertos desde la app se derivan al navegador Android mediante MainActivity; el WebView mantiene la aplicación local abierta.
+- Se explica el flujo de interoperabilidad disponible: consultar una ruta en la plataforma, exportar GPX cuando esté permitido y cargar el archivo con el botón GPX de TerraAltis.
+- Se añadió en la propia interfaz una evaluación funcional de OsmAnd, Gaia GPS, Locus Map, OruxMaps, Avenza Maps y Organic Maps.
+- No se integraron APIs privadas, scraping, contenido de pago ni bases de rutas de terceros. Los enlaces no equivalen a una integración de datos ni a una garantía de seguridad.
+
+EVALUACIÓN Y PRIORIZACIÓN DE FUNCIONES
+1. GPX de ida y vuelta: prioridad alta, ya existe importación/exportación. Probar archivos de cada plataforma y reforzar el manejo de tracks/rutas, waypoints y elevaciones ausentes.
+2. Mapas offline: prioridad alta, inspirada en OsmAnd, Organic Maps y OruxMaps. No está implementada; requeriría almacenamiento, selección de zona, control de tamaño, licencias y atribución por proveedor.
+3. Capas topográficas, curvas de nivel y sombreado: prioridad alta, inspirada en Gaia GPS, Locus Map y OsmAnd. Hay capas en línea, pero debe verificarse su cobertura y su disponibilidad; no confundir visualización con datos usados por el motor.
+4. Perfil de elevación y métricas D+/D-: prioridad alta, inspirada en komoot y Locus Map. TerraAltis muestra un perfil y D+ estimado; falta validar con tracks conocidos y mostrar incertidumbre y D- por separado.
+5. Rutas comunitarias, fotos y reseñas: prioridad media. Usar los enlaces oficiales como referencia; no copiar contenido sin permiso ni tratar opiniones como datos topográficos.
+6. Mapas georreferenciados externos: prioridad media/baja, inspirada en Avenza Maps. Investigar formatos, compatibilidad y licencias antes de implementar.
+7. Búsqueda y puntos de interés: prioridad media. Diseñar búsqueda local y POI con fuentes claras y atribución; no bloquear el motor a un único proveedor comercial.
+
+LIMITACIONES Y SEGURIDAD
+- Wikiloc, AllTrails, komoot y Mapy.com son servicios externos; funciones, cobertura, formatos y requisitos de cuenta pueden variar.
+- Las rutas compartidas son referencias de otras personas, no pruebas de que un tramo sea transitable hoy.
+- La ruta calculada por TerraAltis sigue siendo experimental y no certifica seguridad. Los enlaces y las capas visuales no se integran como restricciones automáticas del motor.
+- Pendiente verificar build de Android y probar en dispositivo que los enlaces abran el navegador correctamente.
