@@ -64,16 +64,41 @@ const MapManager = (() => {
     document.getElementById('p-name').textContent=name||'Perfil de elevación';
     document.getElementById('p-range').textContent=Math.round(min)+' – '+Math.round(max)+' m';box.hidden=false;
   }
+  // Redondeo visual muy leve para el trazado topográfico: conserva los puntos
+  // originales para métricas/GPX y evita convertir la ruta calculada en una línea recta.
+  function roundedRouteCoords(coords, cut = 0.12) {
+    if (coords.length < 3) return coords;
+    const out = [coords[0]];
+    for (let i = 1; i < coords.length - 1; i++) {
+      const prev = coords[i - 1], cur = coords[i], next = coords[i + 1];
+      const entry = [cur[0] + (prev[0] - cur[0]) * cut, cur[1] + (prev[1] - cur[1]) * cut];
+      const exit = [cur[0] + (next[0] - cur[0]) * cut, cur[1] + (next[1] - cur[1]) * cut];
+      out.push(entry);
+      // Muestrear una curva cuadrática corta alrededor del vértice.
+      for (let step = 1; step <= 3; step++) {
+        const t = step / 4, mt = 1 - t;
+        out.push([
+          mt * mt * entry[0] + 2 * mt * t * cur[0] + t * t * exit[0],
+          mt * mt * entry[1] + 2 * mt * t * cur[1] + t * t * exit[1]
+        ]);
+      }
+      out.push(exit);
+    }
+    out.push(coords[coords.length - 1]);
+    return out;
+  }
   function show(pts,color,name,km,gain){
     correctionMode=false;
     const correctionButton=document.querySelector('[data-action="correct-route"]');if(correctionButton)correctionButton.textContent='Corregir camino';
     routeLayers.forEach(layer=>{if(map.hasLayer(layer))map.removeLayer(layer);});routeLayers=[];line=null;glowLine=null;
     if(previewLine){map.removeLayer(previewLine);previewLine=null;}
-    const coords=pts.map(p=>[p[0],p[1]]);
+    const rawCoords=pts.map(p=>[p[0],p[1]]);
+    const coords=currentRoute&&currentRoute.source==='terrain'?roundedRouteCoords(rawCoords):rawCoords;
     const neon=color==='#34a98a'?'#00ffb3':'#00eaff';
-    glowLine=L.polyline(coords,{color:neon,weight:12,opacity:.20,lineCap:'round',lineJoin:'round',className:'route-neon-halo',interactive:false}).addTo(map);routeLayers.push(glowLine);
-    const glow=L.polyline(coords,{color:neon,weight:7,opacity:.38,lineCap:'round',lineJoin:'round',className:'route-neon-glow',interactive:false}).addTo(map);routeLayers.push(glow);
-    line=L.polyline(coords,{color:color==='#34a98a'?'#45ffd0':'#8df8ff',weight:4,opacity:1,lineCap:'round',lineJoin:'round',className:'route-neon-core'}).addTo(map);routeLayers.push(line);
+    // Trazo fino con halo discreto: el recorrido queda visible sin tapar el relieve.
+    glowLine=L.polyline(coords,{color:neon,weight:5,opacity:.12,lineCap:'round',lineJoin:'round',className:'route-neon-halo',interactive:false,smoothFactor:0.5}).addTo(map);routeLayers.push(glowLine);
+    const glow=L.polyline(coords,{color:neon,weight:3,opacity:.20,lineCap:'round',lineJoin:'round',className:'route-neon-glow',interactive:false,smoothFactor:0.5}).addTo(map);routeLayers.push(glow);
+    line=L.polyline(coords,{color:color==='#34a98a'?'#45ffd0':'#8df8ff',weight:2.5,opacity:1,lineCap:'round',lineJoin:'round',className:'route-neon-core',smoothFactor:0.5}).addTo(map);routeLayers.push(line);
     glowLine.bringToBack();
     line.bringToFront();
     map.fitBounds(line.getBounds(),{padding:[40,40]});
