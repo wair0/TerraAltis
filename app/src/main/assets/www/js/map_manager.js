@@ -63,7 +63,7 @@ const MapManager = (() => {
     const arr=typeof pts==='string'?JSON.parse(pts):pts;
     currentRoute={points:arr.map(p=>[Number(p[0]),Number(p[1]),p[2]==null?null:Number(p[2])]),km:Number(km),gain:Number.isFinite(Number(gain))?Number(gain):null,name:'Perfil topográfico estimado',source:'terrain'};
     show(currentRoute.points,getComputedStyle(document.documentElement).getPropertyValue('--cyan').trim()||'#38bdd8',currentRoute.name,currentRoute.km,currentRoute.gain);
-    onStatus('Ruta lista · '+currentRoute.km.toFixed(1)+' km · D+ estimado '+(currentRoute.gain==null?'sin datos':Math.round(currentRoute.gain)+' m')+' · no verifica obstáculos','ok');
+    onStatus('Ruta topográfica estimada · '+currentRoute.km.toFixed(1)+' km · D+ estimado '+(currentRoute.gain==null?'sin datos':Math.round(currentRoute.gain)+' m')+' · ATENCIÓN: no garantiza seguridad ni detecta todos los precipicios, quebradas u obstáculos. Verificá el terreno antes de salir.','busy');
   }
   function routeCalculationFailed(message){document.getElementById('calculate-route').disabled=false;onStatus(message,'busy');}
   function loadGpx(xml,name){
