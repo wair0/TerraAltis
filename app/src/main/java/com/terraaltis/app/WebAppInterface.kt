@@ -19,7 +19,7 @@ class WebAppInterface(private val context: Context, private val webView: WebView
                     RouteWaypoint(item.getDouble("lat"), item.getDouble("lng"))
                 }
                 val result = RoutingEngine.bestRouteThroughWaypoints(context.applicationContext, points)
-                js("TerraAltis.drawRoute(${JSONObject.quote(result.points.toString())}, ${result.km}, ${result.ascent})")
+                js("TerraAltis.drawRoute(${JSONObject.quote(result.points.toString())}, ${result.km}, ${result.ascent}, ${result.maxSlopeDegrees})")
             } catch (e: Exception) {
                 Log.e("TerraAltis", "Falló el cálculo de ruta", e)
                 val message = JSONObject.quote("No se pudo calcular la ruta: ${e.message ?: "error desconocido"}")
