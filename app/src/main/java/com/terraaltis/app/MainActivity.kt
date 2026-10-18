@@ -46,7 +46,6 @@ class MainActivity : AppCompatActivity() {
         runOnUiThread { exportLauncher.launch(filename.ifBlank { "TerraAltis.gpx" }) }
     }
 
-    @SuppressLint("SetJavaScriptEnabled")
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
@@ -55,12 +54,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun receiveSharedGpx(incoming: Intent?) {
         if (incoming?.action != Intent.ACTION_SEND) return
-        val uri = if (android.os.Build.VERSION.SDK_INT >= 33) {
-            incoming.getParcelableExtra(Intent.EXTRA_STREAM, Uri::class.java)
-        } else {
-            @Suppress("DEPRECATION")
-            incoming.getParcelableExtra(Intent.EXTRA_STREAM) as? Uri
-        } ?: return
+        val uri = sharedUri(incoming) ?: return
         var filename = uri.lastPathSegment ?: "Ruta compartida.gpx"
         try {
             contentResolver.query(uri, arrayOf(OpenableColumns.DISPLAY_NAME), null, null, null)?.use { cursor ->
@@ -72,6 +66,15 @@ class MainActivity : AppCompatActivity() {
         } catch (_: Exception) { }
         pendingSharedGpx = uri to filename
         deliverSharedGpx()
+    }
+
+    @Suppress("DEPRECATION")
+    private fun sharedUri(incoming: Intent): Uri? {
+        return if (android.os.Build.VERSION.SDK_INT >= 33) {
+            incoming.getParcelableExtra(Intent.EXTRA_STREAM, Uri::class.java)
+        } else {
+            incoming.getParcelableExtra(Intent.EXTRA_STREAM) as? Uri
+        }
     }
 
     private fun deliverSharedGpx() {
@@ -92,6 +95,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         ActivityCompat.requestPermissions(this,
