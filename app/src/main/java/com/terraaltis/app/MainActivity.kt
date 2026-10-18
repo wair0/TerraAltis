@@ -1,6 +1,7 @@
 package com.terraaltis.app
 
 import android.Manifest
+import android.content.Intent
 import android.annotation.SuppressLint
 import android.net.Uri
 import android.os.Bundle
@@ -53,7 +54,18 @@ class MainActivity : AppCompatActivity() {
             settings.domStorageEnabled = true
             settings.allowFileAccess = true
             settings.setGeolocationEnabled(true)
-            webViewClient = WebViewClient()
+            webViewClient = object : WebViewClient() {
+                override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest): Boolean {
+                    val uri = request.url
+                    if (!request.isForMainFrame || (uri.scheme != "https" && uri.scheme != "http")) return false
+                    return try {
+                        startActivity(Intent(Intent.ACTION_VIEW, uri))
+                        true
+                    } catch (_: Exception) {
+                        false
+                    }
+                }
+            }
             webChromeClient = object : WebChromeClient() {
                 override fun onGeolocationPermissionsShowPrompt(origin: String, callback: GeolocationPermissions.Callback) = callback.invoke(origin, true, false)
                 override fun onShowFileChooser(view: WebView, callback: ValueCallback<Array<Uri>>, params: FileChooserParams): Boolean {
