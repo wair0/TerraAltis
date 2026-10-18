@@ -71,9 +71,10 @@ const MapManager = (() => {
     if(previewLine){map.removeLayer(previewLine);previewLine=null;}
     const coords=pts.map(p=>[p[0],p[1]]);
     const neon=color==='#34a98a'?'#00ffb3':'#00eaff';
-    glowLine=L.polyline(coords,{color:neon,weight:12,opacity:.20,lineCap:'round',lineJoin:'round',className:'route-neon-halo',interactive:false}).addTo(map);routeLayers.push(glowLine);
-    const glow=L.polyline(coords,{color:neon,weight:7,opacity:.38,lineCap:'round',lineJoin:'round',className:'route-neon-glow',interactive:false}).addTo(map);routeLayers.push(glow);
-    line=L.polyline(coords,{color:color==='#34a98a'?'#45ffd0':'#8df8ff',weight:4,opacity:1,lineCap:'round',lineJoin:'round',className:'route-neon-core'}).addTo(map);routeLayers.push(line);
+    // Trazo fino con halo discreto: el recorrido queda visible sin tapar el relieve.
+    glowLine=L.polyline(coords,{color:neon,weight:5,opacity:.12,lineCap:'round',lineJoin:'round',className:'route-neon-halo',interactive:false,smoothFactor:0.5}).addTo(map);routeLayers.push(glowLine);
+    const glow=L.polyline(coords,{color:neon,weight:3,opacity:.20,lineCap:'round',lineJoin:'round',className:'route-neon-glow',interactive:false,smoothFactor:0.5}).addTo(map);routeLayers.push(glow);
+    line=L.polyline(coords,{color:color==='#34a98a'?'#45ffd0':'#8df8ff',weight:2.5,opacity:1,lineCap:'round',lineJoin:'round',className:'route-neon-core',smoothFactor:0.5}).addTo(map);routeLayers.push(line);
     glowLine.bringToBack();
     line.bringToFront();
     map.fitBounds(line.getBounds(),{padding:[40,40]});
