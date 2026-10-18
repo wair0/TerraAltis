@@ -154,6 +154,61 @@ const MapManager = (() => {
     }
     if(currentRoute)newRoute();addWaypoint(e.latlng);
   }
+  let discoveredTrailLayers = new Map();
+  let trailSearchBusy = false;
+  function clearDiscoveredTrails(){
+    discoveredTrailLayers.forEach(layer=>{if(map.hasLayer(layer))map.removeLayer(layer);});
+    discoveredTrailLayers.clear();
+  }
+  function zoomToDiscoveredTrail(id){
+    const entry=discoveredTrailLayers.get(String(id));
+    if(!entry)return;
+    const bounds=entry.layer.getBounds();
+    if(bounds.isValid())map.fitBounds(bounds,{padding:[36,36],maxZoom:15});
+    onStatus('Sendero cartografiado: '+entry.name+' · fuente OpenStreetMap. Verificá actualidad y condiciones reales.','busy');
+  }
+  async function searchNearbyTrails(){
+    if(trailSearchBusy)return;
+    if(map.getZoom()<11){onStatus('Acercá el mapa a la zona que te interesa (zoom 11 o más) y volvé a buscar.','busy');return;}
+    const b=map.getBounds(),south=b.getSouth(),west=b.getWest(),north=b.getNorth(),east=b.getEast();
+    if(north-south>0.35||east-west>0.45){onStatus('Acercá un poco más el mapa para limitar la búsqueda a una zona manejable.','busy');return;}
+    const host=document.getElementById('trail-results');
+    host.replaceChildren();
+    const loading=document.createElement('p');loading.className='hint';loading.textContent='Buscando rutas de senderismo cartografiadas…';host.appendChild(loading);
+    trailSearchBusy=true;const button=document.querySelector('[data-action="search-trails"]');if(button)button.disabled=true;
+    try{
+      const query='[out:json][timeout:25];relation["route"~"hiking|foot|walking"]('+south+','+west+','+north+','+east+');out tags geom;';
+      const response=await fetch('https://overpass-api.de/api/interpreter',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8'},body:'data='+encodeURIComponent(query)});
+      if(!response.ok)throw new Error('El servicio de mapas respondió HTTP '+response.status);
+      const data=await response.json();
+      clearDiscoveredTrails();host.replaceChildren();
+      const relations=(data.elements||[]).filter(el=>el.type==='relation'&&el.members&&el.members.some(m=>m.type==='way'&&Array.isArray(m.geometry)&&m.geometry.length>1)).slice(0,40);
+      if(!relations.length){const empty=document.createElement('p');empty.className='hint';empty.textContent='No se encontraron rutas de senderismo cartografiadas en esta zona. Probá otra área o importá un GPX.';host.appendChild(empty);onStatus('No se encontraron rutas de senderismo en el área visible.','busy');return;}
+      relations.forEach((rel,index)=>{
+        const tags=rel.tags||{},name=tags.name||tags.ref||('Ruta cartografiada '+(index+1)),group=L.featureGroup();
+        (rel.members||[]).filter(m=>m.type==='way'&&Array.isArray(m.geometry)&&m.geometry.length>1).forEach(member=>{
+          let coords=member.geometry.map(p=>[p.lat,p.lon]);
+          if(member.role==='backward')coords=coords.reverse();
+          const segment=L.polyline(coords,{color:'#f0a44b',weight:4,opacity:.88,dashArray:'5 4'});
+          segment.on('click',()=>zoomToDiscoveredTrail(rel.id));
+          group.addLayer(segment);
+        });
+        if(!group.getLayers().length)return;
+        const popup=document.createElement('div'),title=document.createElement('strong'),source=document.createElement('p');
+        title.textContent=name;source.textContent='OpenStreetMap · ruta cartografiada; datos comunitarios no verificados en campo.';
+        popup.append(title,source);group.bindPopup(popup);
+        group.addTo(map);discoveredTrailLayers.set(String(rel.id),{layer:group,name});
+        const item=document.createElement('button');item.type='button';item.className='trail-result';
+        const itemName=document.createElement('strong');itemName.textContent=name;
+        const itemMeta=document.createElement('span');itemMeta.textContent=[tags.network,tags.operator,tags.ref].filter(Boolean).join(' · ')||'Ruta de senderismo · OpenStreetMap';
+        item.append(itemName,itemMeta);item.addEventListener('click',()=>zoomToDiscoveredTrail(rel.id));host.appendChild(item);
+      });
+      onStatus('Se encontraron '+discoveredTrailLayers.size+' rutas cartografiadas. Seleccioná una para verla en el mapa.','ok');
+    }catch(error){
+      host.replaceChildren();const message=document.createElement('p');message.className='hint';message.textContent='No se pudo consultar el catálogo de senderos. Revisá la conexión o importá un GPX.';host.appendChild(message);
+      onStatus('No se pudo buscar senderos: '+(error&&error.message?error.message:'error de conexión'),'busy');
+    }finally{trailSearchBusy=false;if(button)button.disabled=false;}
+  }
   function locate(){onStatus('Buscando ubicación GPS…','busy');map.locate({setView:true,maxZoom:15,enableHighAccuracy:true});}
   function init(id,statusCb){
     onStatus=statusCb||onStatus;map=L.map(id,{zoomControl:false}).setView(SAN_LUIS,10);
@@ -162,7 +217,7 @@ const MapManager = (() => {
     map.on('click',onClick);map.on('locationfound',e=>{L.circleMarker(e.latlng,{radius:7,color:'#fff',weight:2,fillColor:'#38bdd8',fillOpacity:1}).addTo(map);onStatus('Ubicación encontrada','ok');});
     map.on('locationerror',()=>onStatus('No se pudo obtener la ubicación','busy'));
   }
-  return {init,locate,loadGpx,drawRoute,routeCalculationFailed,calculateRoute,showSavedRoute,undoWaypoint,newRoute,toggleCorrection,
+  return {init,locate,loadGpx,drawRoute,routeCalculationFailed,calculateRoute,showSavedRoute,undoWaypoint,newRoute,toggleCorrection,searchNearbyTrails,
     getCurrentRoute:()=>currentRoute?JSON.parse(JSON.stringify(currentRoute)):null,exportCurrentRoute:()=>exportRoute(currentRoute),exportRoute,
     invalidate:()=>map&&setTimeout(()=>map.invalidateSize(),50)};
 })();
