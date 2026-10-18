@@ -178,3 +178,6 @@ body.drawer-open #drawer { transform: translateX(0); }
 .leaflet-overlay-pane .route-neon-halo { filter: drop-shadow(0 0 7px rgba(0, 234, 255, .95)); }
 .leaflet-overlay-pane .route-neon-glow { filter: drop-shadow(0 0 5px rgba(0, 234, 255, .95)); }
 .leaflet-overlay-pane .route-neon-core { filter: drop-shadow(0 0 2px rgba(255, 255, 255, .9)); }
+
+/* Route correction control */
+[data-action="correct-route"] { border-color: var(--cyan); }

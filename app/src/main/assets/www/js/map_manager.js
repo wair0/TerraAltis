@@ -2,7 +2,7 @@
 const MapManager = (() => {
   const SAN_LUIS = [-32.95, -65.45];
   let map, line = null, glowLine = null, previewLine = null, onStatus = () => {}, currentRoute = null;
-  let waypoints = [], waypointMarkers = [];
+  let waypoints = [], waypointMarkers = [], correctionMode = false, correctionPoints = [], correctionMarkers = [];
   const icon = cls => L.divIcon({ className: '', html: '<div class="ta-marker ' + cls + '"></div>', iconSize: [18,18], iconAnchor: [9,9] });
   function defaultLayers() {
     const T=(u,o)=>L.tileLayer(u,o);
@@ -30,6 +30,8 @@ const MapManager = (() => {
     document.getElementById('p-range').textContent=Math.round(min)+' – '+Math.round(max)+' m';box.hidden=false;
   }
   function show(pts,color,name,km,gain){
+    correctionMode=false;
+    const correctionButton=document.querySelector('[data-action="correct-route"]');if(correctionButton)correctionButton.textContent='Corregir camino';
     if(line){map.removeLayer(line);line=null;}
     if(glowLine){map.removeLayer(glowLine);glowLine=null;}
     if(previewLine){map.removeLayer(previewLine);previewLine=null;}
@@ -78,6 +80,7 @@ const MapManager = (() => {
     else{const blob=new Blob([gpx],{type:'application/gpx+xml;charset=utf-8'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=filename+'.gpx';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);onStatus('GPX preparado para descargar','ok');}
   }
   function clearWaypointMarkers(){waypointMarkers.forEach(m=>map.removeLayer(m));waypointMarkers=[];waypoints=[];if(previewLine){map.removeLayer(previewLine);previewLine=null;}}
+  function clearCorrectionMarkers(){correctionMarkers.forEach(m=>map.removeLayer(m));correctionMarkers=[];correctionPoints=[];correctionMode=false;}
   function updateDraft(){
     waypointMarkers.forEach((m,i)=>m.setIcon(icon(i===0?'start':i===waypointMarkers.length-1?'end':'via')));
     if(previewLine)map.removeLayer(previewLine);
@@ -85,7 +88,7 @@ const MapManager = (() => {
     const n=waypoints.length,calc=document.getElementById('calculate-route');calc.hidden=n<2;calc.textContent='Calcular ruta · '+n+' puntos';
     document.getElementById('waypoint-actions').hidden=n<1;document.getElementById('route-actions').hidden=true;
   }
-  function reset(){if(line){map.removeLayer(line);line=null;}if(glowLine){map.removeLayer(glowLine);glowLine=null;}clearWaypointMarkers();currentRoute=null;document.getElementById('profile').hidden=true;document.getElementById('calculate-route').hidden=true;document.getElementById('calculate-route').disabled=false;document.getElementById('waypoint-actions').hidden=true;document.getElementById('route-actions').hidden=true;TerraAltis.setMetrics(null);}
+  function reset(){clearCorrectionMarkers();if(line){map.removeLayer(line);line=null;}if(glowLine){map.removeLayer(glowLine);glowLine=null;}clearWaypointMarkers();currentRoute=null;document.getElementById('profile').hidden=true;document.getElementById('calculate-route').hidden=true;document.getElementById('calculate-route').disabled=false;document.getElementById('waypoint-actions').hidden=true;document.getElementById('route-actions').hidden=true;TerraAltis.setMetrics(null);}
   function addWaypoint(latlng){
     if(waypoints.length&&hav([waypoints[waypoints.length-1].lat,waypoints[waypoints.length-1].lng],[latlng.lat,latlng.lng])<0.01)return onStatus('El nuevo punto está demasiado cerca del anterior','busy');
     waypoints.push({lat:latlng.lat,lng:latlng.lng});waypointMarkers.push(L.marker(latlng,{icon:icon('via')}).addTo(map));updateDraft();
@@ -100,7 +103,23 @@ const MapManager = (() => {
     if(window.Android&&Android.onRouteWaypoints)Android.onRouteWaypoints(JSON.stringify(waypoints));
     else routeCalculationFailed('El cálculo topográfico requiere la aplicación Android');
   }
-  function onClick(e){if(currentRoute)newRoute();addWaypoint(e.latlng);}
+  function toggleCorrection(){
+    if(!currentRoute||currentRoute.points.length<2)return onStatus('Primero calculá o abrí una ruta para poder corregirla','busy');
+    correctionMode=!correctionMode;const button=document.querySelector('[data-action="correct-route"]');
+    if(correctionMode){if(button)button.textContent='Finalizar corrección';onStatus('Modo corrección: tocá el mapa donde querés que pase la ruta. Se recalculará pasando por ese punto.','busy');}
+    else {if(button)button.textContent='Corregir camino';onStatus('Corrección finalizada. Los puntos agregados se aplicarán al recalcular.','busy');}
+  }
+  function onClick(e){
+    if(correctionMode&&currentRoute){
+      const p={lat:e.latlng.lat,lng:e.latlng.lng};const start=currentRoute.points[0],end=currentRoute.points[currentRoute.points.length-1];
+      if(hav([start[0],start[1]],[p.lat,p.lng])<0.02||hav([end[0],end[1]],[p.lat,p.lng])<0.02)return onStatus('Elegí un punto separado del inicio y del destino','busy');
+      correctionPoints.push(p);correctionMarkers.push(L.marker(e.latlng,{icon:icon('via'),draggable:true}).addTo(map));
+      correctionMarkers[correctionMarkers.length-1].on('dragend',ev=>{const pos=ev.target.getLatLng();const idx=correctionMarkers.indexOf(ev.target);if(idx>=0)correctionPoints[idx]={lat:pos.lat,lng:pos.lng};onStatus('Punto movido. Recalculá la ruta para aplicar el cambio.','busy');});
+      waypoints=[{lat:start[0],lng:start[1]},...correctionPoints,{lat:end[0],lng:end[1]}];
+      onStatus('Punto de corrección agregado. Recalculando…','busy');calculateRoute();return;
+    }
+    if(currentRoute)newRoute();addWaypoint(e.latlng);
+  }
   function locate(){onStatus('Buscando ubicación GPS…','busy');map.locate({setView:true,maxZoom:15,enableHighAccuracy:true});}
   function init(id,statusCb){
     onStatus=statusCb||onStatus;map=L.map(id,{zoomControl:false}).setView(SAN_LUIS,10);
@@ -109,7 +128,7 @@ const MapManager = (() => {
     map.on('click',onClick);map.on('locationfound',e=>{L.circleMarker(e.latlng,{radius:7,color:'#fff',weight:2,fillColor:'#38bdd8',fillOpacity:1}).addTo(map);onStatus('Ubicación encontrada','ok');});
     map.on('locationerror',()=>onStatus('No se pudo obtener la ubicación','busy'));
   }
-  return {init,locate,loadGpx,drawRoute,routeCalculationFailed,calculateRoute,showSavedRoute,undoWaypoint,newRoute,
+  return {init,locate,loadGpx,drawRoute,routeCalculationFailed,calculateRoute,showSavedRoute,undoWaypoint,newRoute,toggleCorrection,
     getCurrentRoute:()=>currentRoute?JSON.parse(JSON.stringify(currentRoute)):null,exportCurrentRoute:()=>exportRoute(currentRoute),exportRoute,
     invalidate:()=>map&&setTimeout(()=>map.invalidateSize(),50)};
 })();

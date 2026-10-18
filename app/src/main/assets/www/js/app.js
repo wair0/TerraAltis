@@ -179,6 +179,7 @@ const TerraAltis = {
       case 'confirm-save-route': saveCurrentRoute(); break;
       case 'cancel-save-route': closeAll(); break;
       case 'export-route': MapManager.exportCurrentRoute(); break;
+      case 'correct-route': MapManager.toggleCorrection(); break;
       case 'theme': {
         const next = root.dataset.theme === 'dark' ? 'light' : 'dark';
         root.dataset.theme = next; store.set('ta-theme', next);

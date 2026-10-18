@@ -34,7 +34,6 @@ object RoutingEngine {
     private const val REQUEST_GAP = 1100L
     private const val ASCENT_COST = 8.0
     private const val DESCENT_COST = 0.15
-    private const val SLOPE_THRESHOLD = 0.08
     private const val SLOPE_COST = 5.0
     @Volatile private var lastRequestAt = 0L
 
@@ -95,6 +94,13 @@ object RoutingEngine {
     }
 
     private fun shortestPath(points:List<GridPoint>,z:List<Double>,columns:Int):List<Int>{
+        // Hard limits: try 25 degrees first, then allow up to 30 only as fallback.
+        shortestPathWithSlopeLimit(points,z,columns,kotlin.math.tan(Math.toRadians(25.0)))?.let{return it}
+        shortestPathWithSlopeLimit(points,z,columns,kotlin.math.tan(Math.toRadians(30.0)))?.let{return it}
+        error("No se encontró un trazado dentro de 30°. Probá otros waypoints; el terreno requiere datos más detallados y no se puede validar como seguro.")
+    }
+
+    private fun shortestPathWithSlopeLimit(points:List<GridPoint>,z:List<Double>,columns:Int,maxGrade:Double):List<Int>?{
         val count=points.size;val start=ROWS/2;val end=(columns-1)*ROWS+ROWS/2
         val costs=DoubleArray(count){Double.POSITIVE_INFINITY};val prev=IntArray(count){-1}
         val queue=PriorityQueue<QueueNode>(compareBy{it.cost});costs[start]=0.0;queue.add(QueueNode(start,0.0))
@@ -105,20 +111,19 @@ object RoutingEngine {
                 if(dc==0&&dr==0)continue
                 val nc=col+dc;val nr=row+dr;if(nc !in 0 until columns||nr !in 0 until ROWS)continue
                 val next=nc*ROWS+nr;val a=points[cur.index];val b=points[next]
-                val horizontal=hypot(b.east-a.east,b.north-a.north);val delta=z[next]-z[cur.index]
-                val grade=abs(delta)/horizontal.coerceAtLeast(1.0)
-                val cost=cur.cost+horizontal+max(delta,0.0)*ASCENT_COST+max(-delta,0.0)*DESCENT_COST+
-                    max(grade-SLOPE_THRESHOLD,0.0)*horizontal*SLOPE_COST
+                val horizontal=hypot(b.east-a.east,b.north-a.north).coerceAtLeast(1.0)
+                val delta=z[next]-z[cur.index];val grade=abs(delta)/horizontal
+                if(grade>maxGrade)continue
+                val cost=cur.cost+horizontal+max(delta,0.0)*ASCENT_COST+max(-delta,0.0)*DESCENT_COST
                 if(cost<costs[next]){costs[next]=cost;prev[next]=cur.index;queue.add(QueueNode(next,cost))}
             }
         }
-        if(!costs[end].isFinite())error("No se pudo conectar el inicio con el destino en la cuadrícula")
+        if(!costs[end].isFinite())return null
         val path=ArrayList<Int>();var cursor=end
         while(cursor!=-1){path.add(cursor);if(cursor==start)break;cursor=prev[cursor]}
-        if(path.lastOrNull()!=start)error("No se pudo reconstruir el trazado calculado")
+        if(path.lastOrNull()!=start)return null
         path.reverse();return path
     }
-
     private fun getElevations(context:Context,points:List<GridPoint>):List<Double>{
         val prefs=context.applicationContext.getSharedPreferences(CACHE_NAME,Context.MODE_PRIVATE);val now=System.currentTimeMillis()
         val values=arrayOfNulls<Double>(points.size);val missing=LinkedHashMap<String,MutableList<Int>>()
