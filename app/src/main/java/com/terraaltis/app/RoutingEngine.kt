@@ -214,10 +214,19 @@ object RoutingEngine {
     }
 
     private fun segmentsIntersect(ax:Double,ay:Double,bx:Double,by:Double,cx:Double,cy:Double,dx:Double,dy:Double):Boolean{
+        // Prueba robusta: las orientaciones por sí solas confunden segmentos colineales
+        // pero separados. Se comprueban también los límites de cada segmento.
         fun orient(px:Double,py:Double,qx:Double,qy:Double,rx:Double,ry:Double)=(qx-px)*(ry-py)-(qy-py)*(rx-px)
+        fun onSegment(px:Double,py:Double,qx:Double,qy:Double,rx:Double,ry:Double)=
+            rx>=minOf(px,qx)-1e-8&&rx<=maxOf(px,qx)+1e-8&&ry>=minOf(py,qy)-1e-8&&ry<=maxOf(py,qy)+1e-8
         val o1=orient(ax,ay,bx,by,cx,cy);val o2=orient(ax,ay,bx,by,dx,dy)
         val o3=orient(cx,cy,dx,dy,ax,ay);val o4=orient(cx,cy,dx,dy,bx,by)
-        return ((o1<=0&&o2>=0)||(o1>=0&&o2<=0))&&((o3<=0&&o4>=0)||(o3>=0&&o4<=0))
+        if(((o1>0&&o2<0)||(o1<0&&o2>0))&&((o3>0&&o4<0)||(o3<0&&o4>0)))return true
+        if(abs(o1)<=1e-8&&onSegment(ax,ay,bx,by,cx,cy))return true
+        if(abs(o2)<=1e-8&&onSegment(ax,ay,bx,by,dx,dy))return true
+        if(abs(o3)<=1e-8&&onSegment(cx,cy,dx,dy,ax,ay))return true
+        if(abs(o4)<=1e-8&&onSegment(cx,cy,dx,dy,bx,by))return true
+        return false
     }
 
     private fun pointSegmentDistance(px:Double,py:Double,ax:Double,ay:Double,bx:Double,by:Double):Double{
