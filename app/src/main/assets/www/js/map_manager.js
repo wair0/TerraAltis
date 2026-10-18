@@ -9,11 +9,14 @@ const MapManager = (() => {
     const ignAttr='© Instituto Geográfico Nacional (IGN), Argentina';
     // El servicio TMS del IGN invierte el eje Y; {-y} es la extensión de Leaflet para TMS.
     const ignTms=(layer)=>T('https://wms.ign.gob.ar/geoserver/gwc/service/tms/1.0.0/'+layer+'@EPSG%3A3857@png/{z}/{x}/{-y}.png',{minZoom:0,maxZoom:18,attribution:ignAttr+' · Argenmap'});
+    const openTopo=()=>T('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',{maxZoom:17,attribution:'© OpenStreetMap, SRTM | OpenTopoMap (CC-BY-SA)',subdomains:'abc'});
+    const ignTopoOverlay=()=>T('https://wms.ign.gob.ar/geoserver/gwc/service/tms/1.0.0/mapabase_topo@EPSG%3A3857@png/{z}/{x}/{-y}.png',{minZoom:0,maxZoom:19,maxNativeZoom:13,opacity:0.42,attribution:ignAttr+' · Argenmap topográfico'});
     return {base:{
       'IGN · Argenmap oficial':ignTms('capabaseargenmap'),
       'IGN · Topográfico':T('https://wms.ign.gob.ar/geoserver/gwc/service/tms/1.0.0/mapabase_topo@EPSG%3A3857@png/{z}/{x}/{-y}.png',{minZoom:0,maxZoom:19,maxNativeZoom:13,attribution:ignAttr+' · Argenmap'}),
       'IGN · Gris':ignTms('mapabase_gris'),
-      'OpenTopoMap':T('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',{maxZoom:17,attribution:'© OpenStreetMap, SRTM | OpenTopoMap (CC-BY-SA)',subdomains:'abc'}),
+      'OpenTopoMap':openTopo(),
+      'OpenTopoMap + IGN topográfico':L.layerGroup([openTopo(),ignTopoOverlay()]),
       'OpenStreetMap':T('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap'}),
       'ESRI World Imagery':T('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxZoom:19,attribution:'© Esri'})
     },overlays:{
