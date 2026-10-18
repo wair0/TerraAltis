@@ -1,7 +1,7 @@
 /* Planificador Leaflet con múltiples waypoints */
 const MapManager = (() => {
   const SAN_LUIS = [-32.95, -65.45];
-  let map, line = null, glowLine = null, previewLine = null, onStatus = () => {}, currentRoute = null;
+  let map, line = null, glowLine = null, previewLine = null, routeLayers = [], onStatus = () => {}, currentRoute = null;
   let waypoints = [], waypointMarkers = [], correctionMode = false, correctionPoints = [], correctionMarkers = [];
   const icon = cls => L.divIcon({ className: '', html: '<div class="ta-marker ' + cls + '"></div>', iconSize: [18,18], iconAnchor: [9,9] });
   function defaultLayers() {
@@ -38,14 +38,13 @@ const MapManager = (() => {
   function show(pts,color,name,km,gain){
     correctionMode=false;
     const correctionButton=document.querySelector('[data-action="correct-route"]');if(correctionButton)correctionButton.textContent='Corregir camino';
-    if(line){map.removeLayer(line);line=null;}
-    if(glowLine){map.removeLayer(glowLine);glowLine=null;}
+    routeLayers.forEach(layer=>{if(map.hasLayer(layer))map.removeLayer(layer);});routeLayers=[];line=null;glowLine=null;
     if(previewLine){map.removeLayer(previewLine);previewLine=null;}
     const coords=pts.map(p=>[p[0],p[1]]);
     const neon=color==='#34a98a'?'#00ffb3':'#00eaff';
-    glowLine=L.polyline(coords,{color:neon,weight:16,opacity:.22,lineCap:'round',lineJoin:'round',className:'route-neon-halo',interactive:false}).addTo(map);
-    L.polyline(coords,{color:neon,weight:10,opacity:.42,lineCap:'round',lineJoin:'round',className:'route-neon-glow',interactive:false}).addTo(map);
-    line=L.polyline(coords,{color:color==='#34a98a'?'#45ffd0':'#8df8ff',weight:6,opacity:1,lineCap:'round',lineJoin:'round',className:'route-neon-core'}).addTo(map);
+    glowLine=L.polyline(coords,{color:neon,weight:16,opacity:.22,lineCap:'round',lineJoin:'round',className:'route-neon-halo',interactive:false}).addTo(map);routeLayers.push(glowLine);
+    const glow=L.polyline(coords,{color:neon,weight:10,opacity:.42,lineCap:'round',lineJoin:'round',className:'route-neon-glow',interactive:false}).addTo(map);routeLayers.push(glow);
+    line=L.polyline(coords,{color:color==='#34a98a'?'#45ffd0':'#8df8ff',weight:6,opacity:1,lineCap:'round',lineJoin:'round',className:'route-neon-core'}).addTo(map);routeLayers.push(line);
     glowLine.bringToBack();
     line.bringToFront();
     map.fitBounds(line.getBounds(),{padding:[40,40]});
@@ -94,7 +93,7 @@ const MapManager = (() => {
     const n=waypoints.length,calc=document.getElementById('calculate-route');calc.hidden=n<2;calc.textContent='Calcular ruta · '+n+' puntos';
     document.getElementById('waypoint-actions').hidden=n<1;document.getElementById('route-actions').hidden=true;
   }
-  function reset(){clearCorrectionMarkers();if(line){map.removeLayer(line);line=null;}if(glowLine){map.removeLayer(glowLine);glowLine=null;}clearWaypointMarkers();currentRoute=null;document.getElementById('profile').hidden=true;document.getElementById('calculate-route').hidden=true;document.getElementById('calculate-route').disabled=false;document.getElementById('waypoint-actions').hidden=true;document.getElementById('route-actions').hidden=true;TerraAltis.setMetrics(null);}
+  function reset(){clearCorrectionMarkers();routeLayers.forEach(layer=>{if(map.hasLayer(layer))map.removeLayer(layer);});routeLayers=[];line=null;glowLine=null;if(previewLine){map.removeLayer(previewLine);previewLine=null;}clearWaypointMarkers();currentRoute=null;document.getElementById('profile').hidden=true;document.getElementById('calculate-route').hidden=true;document.getElementById('calculate-route').disabled=false;document.getElementById('waypoint-actions').hidden=true;document.getElementById('route-actions').hidden=true;TerraAltis.setMetrics(null);}
   function addWaypoint(latlng){
     if(waypoints.length&&hav([waypoints[waypoints.length-1].lat,waypoints[waypoints.length-1].lng],[latlng.lat,latlng.lng])<0.01)return onStatus('El nuevo punto está demasiado cerca del anterior','busy');
     waypoints.push({lat:latlng.lat,lng:latlng.lng});waypointMarkers.push(L.marker(latlng,{icon:icon('via')}).addTo(map));updateDraft();
