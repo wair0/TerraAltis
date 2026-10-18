@@ -112,3 +112,15 @@ LIMITACIONES Y SEGURIDAD
 - Las rutas compartidas son referencias de otras personas, no pruebas de que un tramo sea transitable hoy.
 - La ruta calculada por TerraAltis sigue siendo experimental y no certifica seguridad. Los enlaces y las capas visuales no se integran como restricciones automáticas del motor.
 - Pendiente verificar build de Android y probar en dispositivo que los enlaces abran el navegador correctamente.
+
+
+INTEGRACIÓN NATIVA DE EXPLORACIÓN DE RUTAS EN EL MAPA
+Fecha: 2026-10-18
+Rama: feat/explorador-rutas-en-mapa
+
+- Se reemplazaron los enlaces externos en la pestaña Rutas por un flujo dentro de TerraAltis.
+- Se añadió un explorador flotante sobre el mapa con búsqueda de relaciones de senderismo registradas en OpenStreetMap mediante Overpass API; los resultados se dibujan como segmentos en el mapa y se pueden seleccionar para acercar la vista.
+- Se añadieron accesos de importación GPX etiquetados para Wikiloc, AllTrails, komoot y Mapy.com. El usuario elige un archivo GPX guardado en el teléfono y el track se representa en el mapa de TerraAltis.
+- Esta integración NO consulta directamente las bases privadas de esas cuatro plataformas. Sus catálogos/APIs no están disponibles de forma general sin condiciones, credenciales o acuerdos específicos. No se implementó scraping ni se copiaron reseñas/fotos/mapas.
+- Las relaciones de OpenStreetMap pueden estar incompletas o desactualizadas; no certifican transitabilidad. La búsqueda requiere conexión, zoom suficiente y disponibilidad de Overpass.
+- Pendiente: ejecutar build Android, probar CORS/Overpass en WebView real, probar archivos GPX de cada proveedor y revisar atribución/licencias de los datos.
