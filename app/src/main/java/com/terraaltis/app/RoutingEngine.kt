@@ -24,16 +24,16 @@ object RoutingEngine {
     private const val OPEN_TOPO_DATA_ASTER = "https://api.opentopodata.org/v1/aster30m"
     private const val OPEN_ELEVATION = "https://api.open-elevation.com/api/v1/lookup"
     private const val MAX_BATCH = 100
-    private const val ROWS = 11
-    private const val MAX_COLUMNS = 40
-    private const val TARGET_METERS = 100.0
-    private const val CACHE_NAME = "terrain_elevation_cache_v1"
-    private const val CACHE_PREFIX = "e_"
+    private const val ROWS = 13
+    private const val MAX_COLUMNS = 70
+    private const val TARGET_METERS = 55.0
+    private const val CACHE_NAME = "terrain_elevation_cache_v2"
+    private const val CACHE_PREFIX = "e2_"
     private const val CACHE_MAX = 5000
     private const val CACHE_TTL = 30L * 24 * 60 * 60 * 1000
     private const val REQUEST_GAP = 1100L
     private const val ASCENT_COST = 8.0
-    private const val DESCENT_COST = 0.15
+    private const val DESCENT_COST = 2.0
     private const val SLOPE_COST = 5.0
     @Volatile private var lastRequestAt = 0L
 
@@ -67,7 +67,7 @@ object RoutingEngine {
         val direct=hypot(endEast,endNorth)
         require(direct>=10.0) { "Dos waypoints están a menos de 10 metros; separalos un poco" }
         val columns=(ceil(direct/TARGET_METERS).toInt()+1).coerceIn(2,MAX_COLUMNS)
-        val width=(direct*0.30).coerceIn(250.0,2000.0)
+        val width=(direct*0.25).coerceIn(300.0,2500.0)
         val alongEast=endEast/direct;val alongNorth=endNorth/direct
         val crossEast=-alongNorth;val crossNorth=alongEast
         val points=ArrayList<GridPoint>(columns*ROWS)
@@ -94,10 +94,11 @@ object RoutingEngine {
     }
 
     private fun shortestPath(points:List<GridPoint>,z:List<Double>,columns:Int):List<Int>{
-        // Hard limits: try 25 degrees first, then allow up to 30 only as fallback.
-        shortestPathWithSlopeLimit(points,z,columns,kotlin.math.tan(Math.toRadians(25.0)))?.let{return it}
-        shortestPathWithSlopeLimit(points,z,columns,kotlin.math.tan(Math.toRadians(30.0)))?.let{return it}
-        error("No se encontró un trazado dentro de 30°. Probá otros waypoints; el terreno requiere datos más detallados y no se puede validar como seguro.")
+        // Política conservadora: no relajar el límite si no hay una ruta transitable según el DEM.
+        // El modelo de elevación puede omitir paredes y quebradas estrechas; ante dudas se rechaza el trazado.
+        val maxGrade=kotlin.math.tan(Math.toRadians(18.0))
+        shortestPathWithSlopeLimit(points,z,columns,maxGrade)?.let{return it}
+        error("No se encontró un corredor dentro del límite conservador de pendiente (18°). No se dibujó una ruta potencialmente peligrosa. Probá otros waypoints o verificá el terreno con cartografía de mayor resolución.")
     }
 
     private fun shortestPathWithSlopeLimit(points:List<GridPoint>,z:List<Double>,columns:Int,maxGrade:Double):List<Int>?{
@@ -114,7 +115,19 @@ object RoutingEngine {
                 val horizontal=hypot(b.east-a.east,b.north-a.north).coerceAtLeast(1.0)
                 val delta=z[next]-z[cur.index];val grade=abs(delta)/horizontal
                 if(grade>maxGrade)continue
-                val cost=cur.cost+horizontal+max(delta,0.0)*ASCENT_COST+max(-delta,0.0)*DESCENT_COST
+                // No permitir atajos diagonales junto a un desnivel que bloquearía el paso ortogonal.
+                if(dc!=0&&dr!=0){
+                    val sideA=nc*ROWS+row
+                    val sideB=col*ROWS+nr
+                    if(!edgeWithinSlope(cur.index,sideA,points,z,maxGrade) ||
+                       !edgeWithinSlope(cur.index,sideB,points,z,maxGrade) ||
+                       !edgeWithinSlope(sideA,next,points,z,maxGrade) ||
+                       !edgeWithinSlope(sideB,next,points,z,maxGrade)) continue
+                }
+                // Penalizar tanto la subida como la bajada y aumentar el coste cerca de pendientes fuertes.
+                val slopePenalty=horizontal*SLOPE_COST*grade*grade
+                val cost=cur.cost+horizontal+max(delta,0.0)*ASCENT_COST+
+                    max(-delta,0.0)*DESCENT_COST+slopePenalty
                 if(cost<costs[next]){costs[next]=cost;prev[next]=cur.index;queue.add(QueueNode(next,cost))}
             }
         }
@@ -124,6 +137,12 @@ object RoutingEngine {
         if(path.lastOrNull()!=start)return null
         path.reverse();return path
     }
+    private fun edgeWithinSlope(aIndex:Int,bIndex:Int,points:List<GridPoint>,z:List<Double>,maxGrade:Double):Boolean{
+        val a=points[aIndex];val b=points[bIndex]
+        val distance=hypot(b.east-a.east,b.north-a.north).coerceAtLeast(1.0)
+        return abs(z[bIndex]-z[aIndex])/distance<=maxGrade
+    }
+
     private fun getElevations(context:Context,points:List<GridPoint>):List<Double>{
         val prefs=context.applicationContext.getSharedPreferences(CACHE_NAME,Context.MODE_PRIVATE);val now=System.currentTimeMillis()
         val values=arrayOfNulls<Double>(points.size);val missing=LinkedHashMap<String,MutableList<Int>>()
@@ -145,8 +164,8 @@ object RoutingEngine {
         return values.mapIndexed{i,v->v?:error("Falta la elevación del punto ${i+1}")}
     }
 
-    // SRTM tiene resolución cercana a 90 m; redondear a 0,001° permite reutilizar celdas próximas.
-    private fun cacheKey(lat:Double,lng:Double)="${(lat*1000).roundToInt()}_${(lng*1000).roundToInt()}"
+    // Clave más fina (~25–30 m) para no reutilizar una misma elevación en un área de ~100 m.
+    private fun cacheKey(lat:Double,lng:Double)="${(lat*4000).roundToInt()}_${(lng*4000).roundToInt()}"
     private fun trimCache(prefs:SharedPreferences){
         val keys=prefs.all.keys.filter{it.startsWith(CACHE_PREFIX)};if(keys.size<=CACHE_MAX)return
         val oldest=keys.mapNotNull{k->prefs.getString(k,null)?.substringAfter('|')?.toLongOrNull()?.let{ k to it }}
