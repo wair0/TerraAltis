@@ -58,3 +58,10 @@ La pestaña **Rutas** incluye enlaces externos a [Wikiloc](https://es.wikiloc.co
 La app también muestra una evaluación de funciones de referencia de OsmAnd, Gaia GPS, Locus Map, OruxMaps, Avenza Maps y Organic Maps. La evaluación completa y las prioridades están en [ANALISIS_APPS_REFERENCIA.md](ANALISIS_APPS_REFERENCIA.md).
 
 **Importante:** los enlaces no son una integración de sus APIs ni una sincronización automática. Los tracks comunitarios pueden estar desactualizados y no validan la seguridad de una ruta. TerraAltis no garantiza transitabilidad.
+
+
+## Exploración de rutas dentro del mapa
+
+El mapa incluye un explorador que consulta senderos cartografiados en OpenStreetMap (Overpass API) y dibuja sus relaciones sobre TerraAltis. También permite importar un GPX descargado de Wikiloc, AllTrails, komoot o Mapy.com sin salir del mapa. La importación usa el selector de archivos del teléfono.
+
+Esto **no** es una integración directa con los catálogos privados ni las APIs comerciales de esos cuatro servicios. La cobertura depende de los datos abiertos disponibles y la conectividad. Las rutas mostradas no están validadas en campo y no garantizan seguridad ni transitabilidad.
