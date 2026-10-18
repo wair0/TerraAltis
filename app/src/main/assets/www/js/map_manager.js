@@ -43,6 +43,7 @@ const MapManager = (() => {
       'Senderos (Waymarked)':T('https://tile.waymarkedtrails.org/hiking/{z}/{x}/{y}.png',{maxZoom:17,attribution:'waymarkedtrails.org'}),
       'Ciclovías (Waymarked)':T('https://tile.waymarkedtrails.org/cycling/{z}/{x}/{y}.png',{maxZoom:17,attribution:'waymarkedtrails.org'}),
       'IGN · Hidrografía oficial':ignDynamic('Hidrografia',[0,1,2,3],'hidrografía oficial',0.9),
+      'IGN · Cursos y zonas húmedas':ignDynamic('fisiconat_hidro',[4,5,6,7,8,9,10,11,12],'cursos y zonas húmedas',0.72),
       'IGN · Cerros y relieve':ignDynamic('Relieve',[0],'relieve oficial',0.85),
       'IGN · Geología general':ignDynamic('geol_mayores',[0],'geología general',0.45)
     }};
