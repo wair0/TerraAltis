@@ -15,7 +15,13 @@ import kotlin.math.hypot
 import kotlin.math.max
 import kotlin.math.roundToInt
 
-data class RouteResult(val points: JSONArray, val km: Double, val ascent: Double)
+data class RouteResult(
+    val points: JSONArray,
+    val km: Double,
+    val ascent: Double,
+    /** Pendiente máxima permitida usada por el planificador; no certifica transitabilidad. */
+    val maxSlopeDegrees: Double = 25.0
+)
 data class RouteWaypoint(val lat: Double, val lng: Double)
 
 /** Calcula cada tramo entre waypoints; almacena elevaciones y usa servicios alternativos si hay HTTP 429. */
@@ -46,6 +52,7 @@ object RoutingEngine {
         val combined = JSONArray()
         var km = 0.0
         var ascent = 0.0
+        var maxSlopeDegrees = 0.0
         for (i in 0 until waypoints.size - 1) {
             val a = waypoints[i]; val b = waypoints[i + 1]
             val part = bestRoute(context, a.lat, a.lng, b.lat, b.lng)
@@ -54,8 +61,9 @@ object RoutingEngine {
                 combined.put(part.points.getJSONArray(j))
             }
             km += part.km; ascent += part.ascent
+            maxSlopeDegrees = max(maxSlopeDegrees, part.maxSlopeDegrees)
         }
-        return RouteResult(combined, km, ascent)
+        return RouteResult(combined, km, ascent, maxSlopeDegrees)
     }
 
     private fun bestRoute(context: Context, sLat: Double, sLng: Double, eLat: Double, eLng: Double): RouteResult {
@@ -90,22 +98,29 @@ object RoutingEngine {
         val elevations=getElevations(context,points)
         // Verificar cursos de agua oficiales en el corredor; sin esa verificación no se traza.
         val waterBarriers=fetchWaterBarriers(points,sLat,sLng)
-        val path=shortestPath(points,elevations,columns,waterBarriers)
+        val (path, usedSlopeDegrees)=shortestPath(points,elevations,columns,waterBarriers)
         val output=JSONArray();val pathElevations=ArrayList<Double>();var meters=0.0
         for(i in path.indices){
             val p=points[path[i]];val z=elevations[path[i]]
             output.put(JSONArray().put(p.lat).put(p.lng).put(z));pathElevations.add(z)
             if(i>0){val prev=points[path[i-1]];meters+=hypot(p.east-prev.east,p.north-prev.north)}
         }
-        return RouteResult(output,meters/1000.0,ascentOf(pathElevations))
+        return RouteResult(output,meters/1000.0,ascentOf(pathElevations),usedSlopeDegrees)
     }
 
-    private fun shortestPath(points:List<GridPoint>,z:List<Double>,columns:Int,barriers:List<BarrierSegment>):List<Int>{
-        // Política conservadora: no relajar el límite si no hay una ruta transitable según el DEM.
-        // El modelo de elevación puede omitir paredes y quebradas estrechas; ante dudas se rechaza el trazado.
-        val maxGrade=kotlin.math.tan(Math.toRadians(18.0))
-        shortestPathWithSlopeLimit(points,z,columns,maxGrade,barriers)?.let{return it}
-        error("No se encontró un corredor dentro del límite conservador de pendiente (18°). No se dibujó una ruta potencialmente peligrosa. Probá otros waypoints o verificá el terreno con cartografía de mayor resolución.")
+    private fun shortestPath(
+        points:List<GridPoint>,
+        z:List<Double>,
+        columns:Int,
+        barriers:List<BarrierSegment>
+    ):Pair<List<Int>,Double>{
+        // Priorizar pendientes de hasta 25°. Solo si no existe camino se admite hasta 30°.
+        // Nunca se relaja por encima de 30°; el DEM no detecta todos los precipicios ni obstáculos.
+        val preferredGrade=kotlin.math.tan(Math.toRadians(25.0))
+        shortestPathWithSlopeLimit(points,z,columns,preferredGrade,barriers)?.let{return it to 25.0}
+        val fallbackGrade=kotlin.math.tan(Math.toRadians(30.0))
+        shortestPathWithSlopeLimit(points,z,columns,fallbackGrade,barriers)?.let{return it to 30.0}
+        error("No se encontró un corredor dentro del límite máximo de pendiente (30°), evitando los cauces registrados por el IGN. No se dibujó una ruta. Probá otros waypoints o consultá cartografía de mayor resolución.")
     }
 
     private fun shortestPathWithSlopeLimit(points:List<GridPoint>,z:List<Double>,columns:Int,maxGrade:Double,barriers:List<BarrierSegment>):List<Int>?{
