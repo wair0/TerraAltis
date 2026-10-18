@@ -78,11 +78,11 @@ const MapManager = (() => {
     document.getElementById('calculate-route').hidden=true;document.getElementById('calculate-route').disabled=false;
     document.getElementById('waypoint-actions').hidden=true;document.getElementById('route-actions').hidden=false;
   }
-  function drawRoute(pts,km,gain){
+  function drawRoute(pts,km,gain,maxSlopeDegrees){
     const arr=typeof pts==='string'?JSON.parse(pts):pts;
     currentRoute={points:arr.map(p=>[Number(p[0]),Number(p[1]),p[2]==null?null:Number(p[2])]),km:Number(km),gain:Number.isFinite(Number(gain))?Number(gain):null,name:'Perfil topográfico estimado',source:'terrain'};
     show(currentRoute.points,getComputedStyle(document.documentElement).getPropertyValue('--cyan').trim()||'#38bdd8',currentRoute.name,currentRoute.km,currentRoute.gain);
-    onStatus('Ruta topográfica estimada · '+currentRoute.km.toFixed(1)+' km · D+ estimado '+(currentRoute.gain==null?'sin datos':Math.round(currentRoute.gain)+' m')+' · se verificaron cauces del IGN; ATENCIÓN: no garantiza seguridad ni detecta todos los precipicios, quebradas u obstáculos. Verificá el terreno antes de salir.','busy');
+    onStatus('Ruta topográfica estimada · '+currentRoute.km.toFixed(1)+' km · D+ estimado '+(currentRoute.gain==null?'sin datos':Math.round(currentRoute.gain)+' m')+' · pendiente máxima admitida '+(maxSlopeDegrees>=30?'30° (se usó el límite excepcional)':(maxSlopeDegrees>25?'hasta '+Math.round(maxSlopeDegrees)+'°':'25°'))+' · se verificaron cauces del IGN; ATENCIÓN: no garantiza seguridad ni detecta todos los precipicios, quebradas u obstáculos. Verificá el terreno antes de salir.','busy');
   }
   function routeCalculationFailed(message){document.getElementById('calculate-route').disabled=false;onStatus(message,'busy');}
   function loadGpx(xml,name){
