@@ -11,7 +11,7 @@ const MapManager = (() => {
     const ignTms=(layer)=>T('https://wms.ign.gob.ar/geoserver/gwc/service/tms/1.0.0/'+layer+'@EPSG%3A3857@png/{z}/{x}/{-y}.png',{minZoom:0,maxZoom:18,attribution:ignAttr+' · Argenmap'});
     return {base:{
       'IGN · Argenmap oficial':ignTms('capabaseargenmap'),
-      'IGN · Topográfico':ignTms('mapabase_topo'),
+      'IGN · Topográfico':T('https://wms.ign.gob.ar/geoserver/gwc/service/tms/1.0.0/mapabase_topo@EPSG%3A3857@png/{z}/{x}/{-y}.png',{minZoom:0,maxZoom:19,maxNativeZoom:13,attribution:ignAttr+' · Argenmap'}),
       'IGN · Gris':ignTms('mapabase_gris'),
       'OpenTopoMap':T('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',{maxZoom:17,attribution:'© OpenStreetMap, SRTM | OpenTopoMap (CC-BY-SA)',subdomains:'abc'}),
       'OpenStreetMap':T('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap'}),
