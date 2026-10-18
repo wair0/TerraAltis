@@ -49,18 +49,43 @@ object RoutingEngine {
 
     fun bestRouteThroughWaypoints(context: Context, waypoints: List<RouteWaypoint>): RouteResult {
         require(waypoints.size in 2..30) { "La ruta debe tener entre 2 y 30 waypoints" }
+
+        // Dividir automáticamente los tramos largos en segmentos de hasta 4,5 km.
+        // Cada subtramo conserva la malla conservadora (~55 m) y pasa por el mismo
+        // cálculo de elevación, pendiente e hidrografía; no se baja la resolución.
+        val analysisWaypoints = ArrayList<RouteWaypoint>()
+        analysisWaypoints.add(waypoints.first())
+        for (i in 0 until waypoints.size - 1) {
+            val a = waypoints[i]
+            val b = waypoints[i + 1]
+            val meanLat = Math.toRadians((a.lat + b.lat) / 2.0)
+            val east = (b.lng - a.lng) * 111320.0 * cos(meanLat)
+            val north = (b.lat - a.lat) * 111320.0
+            val directMeters = hypot(east, north)
+            val pieces = ceil(directMeters / 4500.0).toInt().coerceAtLeast(1)
+            for (piece in 1..pieces) {
+                val t = piece.toDouble() / pieces
+                analysisWaypoints.add(RouteWaypoint(
+                    a.lat + (b.lat - a.lat) * t,
+                    a.lng + (b.lng - a.lng) * t
+                ))
+            }
+        }
+
         val combined = JSONArray()
         var km = 0.0
         var ascent = 0.0
         var maxSlopeDegrees = 0.0
-        for (i in 0 until waypoints.size - 1) {
-            val a = waypoints[i]; val b = waypoints[i + 1]
+        for (i in 0 until analysisWaypoints.size - 1) {
+            val a = analysisWaypoints[i]
+            val b = analysisWaypoints[i + 1]
             val part = bestRoute(context, a.lat, a.lng, b.lat, b.lng)
             for (j in 0 until part.points.length()) {
                 if (i > 0 && j == 0) continue
                 combined.put(part.points.getJSONArray(j))
             }
-            km += part.km; ascent += part.ascent
+            km += part.km
+            ascent += part.ascent
             maxSlopeDegrees = max(maxSlopeDegrees, part.maxSlopeDegrees)
         }
         return RouteResult(combined, km, ascent, maxSlopeDegrees)
