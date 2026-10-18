@@ -186,9 +186,9 @@ body.drawer-open #drawer { transform: translateX(0); }
 .leaflet-overlay-pane .route-neon-halo,
 .leaflet-overlay-pane .route-neon-glow,
 .leaflet-overlay-pane .route-neon-core { stroke-linecap: round; stroke-linejoin: round; }
-.leaflet-overlay-pane .route-neon-halo { filter: drop-shadow(0 0 7px rgba(0, 234, 255, .95)); }
-.leaflet-overlay-pane .route-neon-glow { filter: drop-shadow(0 0 5px rgba(0, 234, 255, .95)); }
-.leaflet-overlay-pane .route-neon-core { filter: drop-shadow(0 0 2px rgba(255, 255, 255, .9)); }
+.leaflet-overlay-pane .route-neon-halo { filter: drop-shadow(0 0 2px rgba(0, 234, 255, .55)); }
+.leaflet-overlay-pane .route-neon-glow { filter: drop-shadow(0 0 1px rgba(0, 234, 255, .45)); }
+.leaflet-overlay-pane .route-neon-core { filter: drop-shadow(0 0 1px rgba(255, 255, 255, .45)); }
 
 /* Route correction control */
 [data-action="correct-route"] { border-color: var(--cyan); }
