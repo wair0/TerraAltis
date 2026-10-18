@@ -114,7 +114,7 @@ const MapManager = (() => {
       const p={lat:e.latlng.lat,lng:e.latlng.lng};const start=currentRoute.points[0],end=currentRoute.points[currentRoute.points.length-1];
       if(hav([start[0],start[1]],[p.lat,p.lng])<0.02||hav([end[0],end[1]],[p.lat,p.lng])<0.02)return onStatus('Elegí un punto separado del inicio y del destino','busy');
       correctionPoints.push(p);correctionMarkers.push(L.marker(e.latlng,{icon:icon('via'),draggable:true}).addTo(map));
-      correctionMarkers[correctionMarkers.length-1].on('dragend',ev=>{const pos=ev.target.getLatLng();const idx=correctionMarkers.indexOf(ev.target);if(idx>=0)correctionPoints[idx]={lat:pos.lat,lng:pos.lng};onStatus('Punto movido. Recalculá la ruta para aplicar el cambio.','busy');});
+      correctionMarkers[correctionMarkers.length-1].on('dragend',ev=>{const pos=ev.target.getLatLng();const idx=correctionMarkers.indexOf(ev.target);if(idx>=0){correctionPoints[idx]={lat:pos.lat,lng:pos.lng};waypoints=[{lat:currentRoute.points[0][0],lng:currentRoute.points[0][1]},...correctionPoints,{lat:currentRoute.points[currentRoute.points.length-1][0],lng:currentRoute.points[currentRoute.points.length-1][1]}];}onStatus('Punto movido. Recalculá la ruta para aplicar el cambio.','busy');});
       waypoints=[{lat:start[0],lng:start[1]},...correctionPoints,{lat:end[0],lng:end[1]}];
       onStatus('Punto de corrección agregado. Recalculando…','busy');calculateRoute();return;
     }
