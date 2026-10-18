@@ -1,0 +1,59 @@
+TERRAALTIS — CONTINUIDAD DEL PROYECTO
+Actualizado: 2026-10-18
+Repositorio: https://github.com/wair0/TerraAltis
+Rama de trabajo: main
+
+OBJETIVO DEL PROYECTO
+Aplicación Android para planificar rutas entre puntos elegidos en el mapa, calculando el recorrido desde cero. La prioridad es reducir el desnivel positivo y evitar cauces, barrancos y pendientes fuertes cuando los datos disponibles lo permitan. No debe presentar una ruta como segura si los datos son incompletos.
+
+ÚLTIMOS CAMBIOS REGISTRADOS
+1. 4a4aecdd — “Add verified IGN waterways and wetlands overlay”
+   Se añadió al selector del mapa la capa visual “IGN · Cauces y humedales” en app/src/main/assets/www/js/map_manager.js. La capa es informativa y no se usa todavía como restricción del motor de rutas. IMPORTANTE: antes de depender de ella para decisiones de navegación, verificar el servicio REST fisiconat_hidro y los IDs de capa; no asumir que están validados solo por el mensaje del commit.
+   Commit: https://github.com/wair0/TerraAltis/commit/4a4aecdd67de02e5cc65dadea79ca27358cd2fc4
+
+2. 9aa1b567 — “Pass route slope threshold to map status”
+   Se pasó el límite de pendiente usado por el motor al estado mostrado en el mapa.
+   Commit: https://github.com/wair0/TerraAltis/commit/9aa1b5677aa9e61e5abad5fe98e21dc1ffc95c91
+
+3. 21a33343 — “Show the route slope threshold in route status”
+   El estado de ruta muestra el umbral de pendiente.
+   Commit: https://github.com/wair0/TerraAltis/commit/21a3334335c5f6b0839290ab890df57f91f6aa0f
+
+4. b2ac5100 — “Prefer 25 degree slopes and cap fallback at 30 degrees”
+   El motor intenta primero encontrar un camino con pendiente máxima de 25° y, si no lo encuentra, permite reintentar con un límite de 30°. Esto es un umbral del algoritmo, no una certificación de seguridad.
+   Commit: https://github.com/wair0/TerraAltis/commit/b2ac51001b072d34313cf8dd5ac0db44904ad88a
+
+5. de9f34e4 — “Fix robust line intersection for water barriers”
+   Corrección geométrica para detectar intersecciones entre segmentos de ruta y cursos de agua.
+   Commit: https://github.com/wair0/TerraAltis/commit/de9f34e43512930ddafcc24470c605e61f897ae3
+
+ESTADO DE COMPILACIÓN
+GitHub Actions informó éxito para las ejecuciones:
+- https://github.com/wair0/TerraAltis/actions/runs/39093778709
+- https://github.com/wair0/TerraAltis/actions/runs/39093724858
+- https://github.com/wair0/TerraAltis/actions/runs/39093720067
+- https://github.com/wair0/TerraAltis/actions/runs/39093718301
+- https://github.com/wair0/TerraAltis/actions/runs/39093372741
+
+Éxito de compilación no equivale a una prueba funcional en el dispositivo ni confirma que cada capa cartográfica cargue correctamente.
+
+MOTOR DE RUTAS: SITUACIÓN CONOCIDA
+- Proveedores de elevación configurados: OpenTopoData SRTM30m, ASTER30m y Open-Elevation.
+- La consulta de hidrografía usa servicios REST oficiales del IGN para cursos de agua permanentes e intermitentes.
+- Los tramos que cruzan cauces detectados pueden bloquearse; no se modelan de forma completa puentes, vados ni todos los obstáculos del terreno.
+- El algoritmo usa una malla aproximada para buscar caminos y aplica penalizaciones de pendiente y desnivel.
+- La capa visual de humedales agregada en el último cambio aún no está integrada en el motor.
+
+PRÓXIMAS TAREAS RECOMENDADAS
+1. Verificar de verdad el endpoint fisiconat_hidro y sus IDs contra el catálogo REST del IGN. Si no existen o no corresponden, retirar o corregir la capa para evitar mostrar datos erróneos.
+2. Investigar la integración del MDE-Ar oficial del IGN y evaluar cobertura, licencia, rendimiento y uso sin conexión antes de sustituir proveedores.
+3. Incorporar polígonos verificados de humedales, barrancas y quebradas como penalizaciones o zonas prohibidas en el cálculo, solo cuando el origen y la geometría estén validados.
+4. Mejorar la gestión de errores y límites de los servicios de elevación, incluyendo alternativas ante HTTP 429, DNS o falta de conectividad.
+5. Probar rutas en distintos tipos de terreno y revisar el desnivel positivo calculado comparándolo con perfiles de elevación conocidos.
+6. Mantener la advertencia visible de que la cartografía puede estar incompleta y que el resultado no garantiza seguridad en terreno.
+
+CARPETA archivosparasubir
+Al revisar el árbol de la rama main el 2026-10-18, no aparece una carpeta llamada archivosparasubir ni “archivos para subir”; por eso no hubo que borrar archivos de esa carpeta en esta revisión.
+
+REGLA DE CONTINUIDAD
+Antes de afirmar que algo está verificado, comprobar el código o los metadatos del servicio. Después de cada cambio, revisar el diff, esperar el resultado de GitHub Actions y distinguir claramente compilación exitosa de funcionamiento probado.
