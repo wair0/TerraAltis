@@ -43,6 +43,9 @@ const MapManager = (() => {
       'Senderos (Waymarked)':T('https://tile.waymarkedtrails.org/hiking/{z}/{x}/{y}.png',{maxZoom:17,attribution:'waymarkedtrails.org'}),
       'Ciclovías (Waymarked)':T('https://tile.waymarkedtrails.org/cycling/{z}/{x}/{y}.png',{maxZoom:17,attribution:'waymarkedtrails.org'}),
       'IGN · Hidrografía oficial':ignDynamic('Hidrografia',[0,1,2,3],'hidrografía oficial',0.9),
+      // Capas oficiales ANIDA/Físico-natural: cauces, esteros, bañados y cañadas.
+      // IDs verificados en el directorio REST del IGN; la capa es de contexto, no certifica transitabilidad.
+      'IGN · Cauces y humedales':ignDynamic('fisiconat_hidro',[4,5,6,7,8,9,10,11,12],'cauces y humedales oficiales',0.72),
       'IGN · Cerros y relieve':ignDynamic('Relieve',[0],'relieve oficial',0.85),
       'IGN · Geología general':ignDynamic('geol_mayores',[0],'geología general',0.45)
     }};
