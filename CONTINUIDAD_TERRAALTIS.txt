@@ -55,6 +55,28 @@ PRÓXIMAS TAREAS RECOMENDADAS
 CARPETA archivosparasubir
 Al revisar el árbol de la rama main el 2026-10-18, no aparece una carpeta llamada archivosparasubir ni “archivos para subir”; por eso no hubo que borrar archivos de esa carpeta en esta revisión.
 
+
+CORRECCIÓN DE RUTAS LARGAS Y PRESENTACIÓN VISUAL
+Fecha: 2026-10-18
+Rama integrada: main
+Commit: 0aeda0c0481f4319fc2a15c928bbd7ab44a28d1d
+PR: https://github.com/wair0/TerraAltis/pull/3
+
+CAMBIOS
+- RoutingEngine.kt divide automáticamente los tramos largos en subtramos de hasta aproximadamente 4,5 km antes de calcularlos. La intención es evitar el rechazo inmediato de tramos mayores de unos 4,8 km sin cambiar a una malla de menor resolución.
+- Cada subtramo sigue usando el cálculo conservador existente y sus consultas de elevación, pendiente e hidrografía.
+- La división introduce waypoints internos artificiales: el resultado puede no ser globalmente óptimo y las rutas largas pueden requerir más consultas de datos.
+- map_manager.js reduce el grosor de la línea de ruta y redondea visualmente algunas esquinas para evitar el aspecto de segmentos completamente rectos. Este redondeo es visual y se aplica a rutas calculadas sobre terreno; no modifica la geometría guardada ni los puntos exportados en GPX.
+- styles.css reduce el brillo y las sombras de la línea celeste para que no parezca más gruesa de lo configurado.
+- No se agregan ondulaciones arbitrarias: la representación debe seguir siendo fiel al recorrido calculado y no sugerir un camino distinto.
+
+COMPILACIÓN DE ESTA VERSIÓN
+- GitHub Actions: https://github.com/wair0/TerraAltis/actions/runs/39096635638
+- Resultado comprobado: completed / success para el commit 0aeda0c0481f4319fc2a15c928bbd7ab44a28d1d.
+- La ejecución de CI generó el artefacto de descarga de APK/ZIP según el workflow del repositorio.
+- La compilación exitosa no demuestra por sí sola que el cálculo de rutas largas funcione correctamente en todos los terrenos. Sigue pendiente la prueba funcional en un dispositivo Android real, incluyendo rutas largas, disponibilidad de servicios de elevación e hidrografía y revisión visual de la línea.
+
+
 REGLA DE CONTINUIDAD
 Antes de afirmar que algo está verificado, comprobar el código o los metadatos del servicio. Después de cada cambio, revisar el diff, esperar el resultado de GitHub Actions y distinguir claramente compilación exitosa de funcionamiento probado.
 
